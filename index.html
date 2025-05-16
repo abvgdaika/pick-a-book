@@ -218,7 +218,7 @@ function fetchBookInfo(title) {
   result.innerHTML = `<strong>${title}</strong><br><br>Ищу описание...`;
 
   const query = encodeURIComponent(title);
-  const url = `https://openlibrary.org/search.json?title=${query}`;
+  const url = `https://book-proxy.onrender.com/api/book?title=${query}`;
 
   fetch(url)
     .then(response => response.json())
