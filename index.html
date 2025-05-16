@@ -210,34 +210,36 @@
             transition: opacity 0.3s ease;
         " target="_blank">Instagram @acidandglue</a>
 </footer><script src="book_list.js"></script><script src="ya_book_list.js"></script><script src="detective_books.js"></script><script src="thriller_books.js"></script>
-
-
 <script>
+function showRandomBook(list) {
+  const result = document.getElementById("result");
+  result.innerHTML = "";
+  result.style.display = 'block';
+
+  const randomBook = list[Math.floor(Math.random() * list.length)];
+  result.textContent = randomBook;
+
+  fetchBookInfo(randomBook);
+}
+
 function fetchBookInfo(title) {
   const result = document.getElementById("result");
-  result.innerHTML = `<strong>${title}</strong><br><br>Ищу описание...`;
-
   const query = encodeURIComponent(title);
-  const url = `https://book-proxy.onrender.com/api/book?title=${query}`;
+  const url = `https://www.googleapis.com/books/v1/volumes?q=${query}&langRestrict=ru`;
 
   fetch(url)
     .then(response => response.json())
     .then(data => {
-      if (data && data.docs && data.docs.length > 0) {
-        const book = data.docs[0];
-        const bookTitle = book.title || title;
-        const author = book.author_name ? book.author_name.join(", ") : "Автор не найден";
-        const cover = book.cover_i
-          ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
-          : "";
-        const olLink = book.key ? `https://openlibrary.org${book.key}` : "#";
-
-        result.innerHTML = `<strong>${title}</strong><br><br><strong>${bookTitle}</strong><br>
-          <em>${author}</em><br>
-          ${cover ? `<br><img src="${cover}" alt="Обложка">` : ""}
-          <br><a href="${olLink}" target="_blank">Подробнее на Open Library</a>`;
+      if (data.totalItems > 0) {
+        const book = data.items[0].volumeInfo;
+        result.innerHTML += `<br><br><strong>${book.title}</strong><br>
+          <em>${book.authors?.join(", ")}</em><br>
+          ${book.description ? book.description.substring(0, 300) + "..." : "Описание не найдено."}
+          ${book.imageLinks ? `<br><img src="${book.imageLinks.thumbnail}" alt="Обложка">` : ""}
+          ${book.infoLink ? `<br><a href="${book.infoLink}" target="_blank">Подробнее</a>` : ""}
+        `;
       } else {
-        result.innerHTML += "<br><em>Информация о книге не найдена в Open Library.</em>";
+        result.innerHTML += "<br><em>Информация о книге не найдена.</em>";
       }
     })
     .catch(err => {
