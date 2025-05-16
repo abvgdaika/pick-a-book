@@ -194,27 +194,11 @@
 <div class="buttons">
 <button onclick="showRandomBook(books)"><svg fill="currentColor" height="20" viewbox="0 0 16 16" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M1 2.828c.885-.37 2.154-.828 4-.828s3.115.457 4 .828V14c-.885-.37-2.154-.828-4-.828s-3.115.457-4 .828V2.828z"></path><path d="M9 2.828c.885-.37 2.154-.828 4-.828s3.115.457 4 .828V14c-.885-.37-2.154-.828-4-.828s-3.115.457-4 .828V2.828z"></path></svg> Хочу что-то серьёзное</button>
 <button onclick="showRandomBook(ya_books)"><svg fill="#ff69b4" height="20" viewbox="0 0 16 16" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M8 2.748-.717-6.737C5.6-.281 8 2.223 8 2.223s2.4-2.504 6.717-5.96C8-3.248 8 2.748 8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143a.8.8 0 0 1 .352.357c.147-.221.339-.428.561-.624C12.72-3.042 23.333 4.867 8 15z"></path></svg> Хочу Young Adult</button>
-<button onclick="showRandomBook(detective_books)"><svg fill="#000000" height="20" viewbox="0 0 16 16" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M6.5 2a.5.5 0 0 1 .5.5V3h2v-.5a.5.5 0 0 1 1 0V3h1.5a.5.5 0 0 1 .5.5v.5H4V3.5a.5.5 0 0 1 .5-.5H6v-.5a.5.5 0 0 1 .5-.5z"></path><path d="M3 5h10v.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V5zm1 1v1h8V6H4zm0 2v.5a.5.5 0 0 0 .5.5h.732c-.16.207-.287.433-.377.672A4.5 4.5 0 0 0 8 14.5c1.503 0 2.831-.713 3.645-1.828a4.577 4.577 0 0 0-.377-.672h.732a.5.5 0 0 0 .5-.5V8H4zm2.5 2a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm3 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"></path></svg> Хочу детектив</button>
+<button onclick="showRandomBook(detective_books)"><svg fill="#000000" height="20" viewbox="0 0 16 16" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M6.5 2a.5.5 0 0 1 .5.5V3h2v-.5a.5.5 0 0 1 1 0V3h1.5a.5.5 0 0 1 .5.5v.5H4V3.5a.5.5 0 0 1 .5-.5H6v-.5a.5.5 0 0 1 .5-.5z"></path><path d="M3 5h10v.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V5zm1 1v1h8V6H4zm0 2v.5a.5.5 0 0 0 .5.5h.732c-.16.207-.287.433-.377.672A4.5 4.5 0 0 0 8 14.5c1.503 0 2.831-.713 3.645-1.828a4.577 4.577 0 0 0-.377-.672h.732a.5.5 0 0 0 .5-.5V8H4z"></path></svg> Хочу детектив</button>
 <button onclick="showRandomBook(thriller_books)"><svg fill="#999" height="20" viewbox="0 0 16 16" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M8 0a5 5 0 0 0-5 5v10l1-1 1 1 1-1 1 1 1-1 1 1 1-1 1 1V5a5 5 0 0 0-5-5zM5.5 7a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0zm5 0a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"></path></svg> Хочу ужасов и триллеров</button>
 </div>
 <div id="result"></div>
 <div class="subtitle">l’appel du vide</div>
-<script>
-        const books = ['«1984» — Джордж Оруэлл', '«Преступление и наказание» — Фёдор Достоевский'];
-        const ya_books = ['«Виноваты звёзды» — Джон Грин', '«Из крови и пепла» — Дженнифер Арментраут'];
-        const detective_books = ['«Убийство в Восточном экспрессе» — Агата Кристи', '«Исчезнувшая» — Гиллиан Флинн'];
-        const thriller_books = ['«Тихая пациентка» — Алекс Михаэлидес', '«Женщина в окне» — А. Дж. Финн'];
-
-        function showRandomBook(list) {
-            const result = document.getElementById('result');
-            result.textContent = "";
-            result.style.display = 'block';
-            setTimeout(() => {
-                const randomBook = list[Math.floor(Math.random() * list.length)];
-                result.textContent = randomBook;
-            }, 900);
-        }
-        </script>
 <footer style="margin-top: 100px; padding: 40px; font-size: 14px; text-align: center; color: #111111;">
 <a href="https://instagram.com/acidandglue" style="
             color: #111111;
@@ -225,5 +209,44 @@
             font-weight: normal;
             transition: opacity 0.3s ease;
         " target="_blank">Instagram @acidandglue</a>
-</footer></body>
+</footer><script src="book_list.js"></script><script src="ya_book_list.js"></script><script src="detective_books.js"></script><script src="thriller_books.js"></script>
+<script>
+function showRandomBook(list) {
+  const result = document.getElementById("result");
+  result.innerHTML = "";
+  result.style.display = 'block';
+
+  const randomBook = list[Math.floor(Math.random() * list.length)];
+  result.textContent = randomBook;
+
+  fetchBookInfo(randomBook);
+}
+
+function fetchBookInfo(title) {
+  const result = document.getElementById("result");
+  const query = encodeURIComponent(title);
+  const url = `https://www.googleapis.com/books/v1/volumes?q=${query}&langRestrict=ru`;
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (data.totalItems > 0) {
+        const book = data.items[0].volumeInfo;
+        result.innerHTML += `<br><br><strong>${book.title}</strong><br>
+          <em>${book.authors?.join(", ")}</em><br>
+          ${book.description ? book.description.substring(0, 300) + "..." : "Описание не найдено."}
+          ${book.imageLinks ? `<br><img src="${book.imageLinks.thumbnail}" alt="Обложка">` : ""}
+          ${book.infoLink ? `<br><a href="${book.infoLink}" target="_blank">Подробнее</a>` : ""}
+        `;
+      } else {
+        result.innerHTML += "<br><em>Информация о книге не найдена.</em>";
+      }
+    })
+    .catch(err => {
+      console.error("Ошибка при получении книги:", err);
+      result.innerHTML += "<br><em>Произошла ошибка при загрузке информации.</em>";
+    });
+}
+</script>
+</body>
 </html>
