@@ -1,11 +1,12 @@
 
 <!DOCTYPE html>
+
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Pick a book</title>
-    <link href="https://fonts.googleapis.com/css2?family=Homemade+Apple&display=swap" rel="stylesheet">
-    <style>
+<meta charset="utf-8"/>
+<title>Pick a book</title>
+<link href="https://fonts.googleapis.com/css2?family=Homemade+Apple&amp;display=swap" rel="stylesheet"/>
+<style>
         body {
             margin: 0;
             padding: 0;
@@ -62,23 +63,47 @@
             color: #aaa;
         }
     </style>
-</head>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/><style>
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.container, .book-display, .footer {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.book-card {
+  width: 100%;
+  max-width: 600px;
+  margin: auto;
+}
+
+@media (max-width: 768px) {
+  .book-title, .book-author {
+    font-size: 1rem;
+  }
+  h1 {
+    font-size: 1.5rem;
+  }
+}
+</style></head>
 <body>
-    <div class="intro">Bienvenue dans l’appel du vide</div>
-    <h1>Что почитать?</h1>
-    <div class="instructions">
-        Нажмите на одну из кнопок ниже — и вы получите случайную книгу из выбранной категории.<br>
+<div class="intro">Bienvenue dans l’appel du vide</div>
+<h1>Что почитать?</h1>
+<div class="instructions">
+        Нажмите на одну из кнопок ниже — и вы получите случайную книгу из выбранной категории.<br/>
         Это может быть классика, триллер или что-то неожиданное. Просто доверьтесь рандому :)
     </div>
-    <div class="button-group">
-        <button onclick="recommend('serious')">Хочу что-то серьёзное</button>
-        <button onclick="recommend('ya')">Хочу Young Adult</button>
-        <button onclick="recommend('detective')">Хочу детектив</button>
-        <button onclick="recommend('thriller')">Хочу ужасов и триллеров</button>
-    </div>
-    <div id="result"></div>
-    <footer>Instagram @acidandglue</footer>
-
-    <script src="books_with_api.js"></script>
+<div class="button-group">
+<button onclick="recommend('serious')">Хочу что-то серьёзное</button>
+<button onclick="recommend('ya')">Хочу Young Adult</button>
+<button onclick="recommend('detective')">Хочу детектив</button>
+<button onclick="recommend('thriller')">Хочу ужасов и триллеров</button>
+</div>
+<div id="result"></div>
+<footer>Instagram @acidandglue</footer>
+<script src="books_with_api.js"></script>
 </body>
 </html>
