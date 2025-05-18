@@ -1,278 +1,84 @@
 
 <!DOCTYPE html>
-
 <html lang="ru">
 <head>
-<meta charset="utf-8"/>
-<title>Что почитать?</title>
-<style>
+    <meta charset="UTF-8">
+    <title>Pick a book</title>
+    <link href="https://fonts.googleapis.com/css2?family=Homemade+Apple&display=swap" rel="stylesheet">
+    <style>
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Helvetica Neue', sans-serif;
             background: url('848A503B-8110-4E0A-992C-1CBFA22380C6.jpeg') no-repeat center center fixed;
             background-size: cover;
+            font-family: Arial, sans-serif;
             color: #fff;
             text-align: center;
         }
-
         h1 {
-            margin-top: 80px;
-            font-size: 36px;
-            background-color: rgba(0, 0, 0, 0.6);
-            display: inline-block;
-            padding: 10px 20px;
-            border-radius: 8px;
-        }
-
-        #result {
-  transition: all 0.3s ease;
-            font-size: 26px;
-            font-weight: 500;
-            background: rgba(255, 255, 255, 0.92);
-            color: #000000;
-            padding: 40px;
-            max-width: 80%;
             margin-top: 30px;
-            margin-bottom: 40px;
-            box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
-            display: none;
-            border-radius: 8px;
-            text-align: center;
-            margin-left: auto;
-            margin-right: auto;
+            font-size: 32px;
         }
-
-        .buttons {
-            margin-top: 20px;
+        .intro {
+            font-family: 'Homemade Apple', cursive;
+            font-size: 26px;
+            margin: 20px 0 10px 0;
         }
-
+        .instructions {
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #ddd;
+        }
+        .button-group {
+            margin: 20px 0;
+        }
         button {
-            padding: 10px 20px;
-            margin: 10px;
-            font-size: 16px;
+            background: #222;
+            color: #fff;
             border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .subtitle {
-            margin-top: 40px;
-            font-size: 28px;
-            font-style: italic;
-        }
-    
-.subtitle {
-    margin-top: 40px;
-    font-size: 56px;
-    font-style: normal;
-    color: #000000;
-    font-family: 'Indie Flower', cursive;
-}
-
-@media screen and (max-width: 600px) {
-    #result {
-        margin-top: 60px;
-    }
-}
-
-#result {
-    background: linear-gradient(145deg, #ffe8e0, #fff9f5);
-    color: #2e2e2e;
-    font-size: 28px;
-    font-weight: 600;
-    border: 3px dashed #ffb6b6;
-    box-shadow: 0 0 20px rgba(255, 105, 135, 0.4);
-    transition: all 0.5s ease;
-}
-
-.subtitle {
-    font-family: 'Patrick Hand', cursive;
-    font-style: italic;
-    font-size: 54px;
-    color: #000000;
-}
-
-#result {
-    opacity: 0;
-    transform: translateY(20px);
-    animation: fadeInUp 0.8s ease forwards;
-}
-
-@keyframes fadeInUp {
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-#result {
-    background: linear-gradient(145deg, #dce8f2, #eaf0f5);
-    color: #1f1f1f;
-    border: 2px solid #b0c4de;
-}
-
-@media screen and (max-width: 600px) {
-    h1 {
-        font-size: 28px;
-    }
-
-    #result {
-        font-size: 22px;
-        padding: 24px;
-    }
-
-    button {
-        font-size: 14px;
-        padding: 8px 16px;
-    }
-
-    .subtitle {
-        font-size: 36px;
-    }
-}
-
-#result {
-    background: rgba(220, 232, 242, 0.85);
-    font-size: 32px;
-    padding: 50px;
-    border-radius: 14px;
-    max-width: 90%;
-}
-
-/* Адаптивность под мобильные устройства */
-@media screen and (max-width: 600px) {
-    body {
-        padding: 10px;
-    }
-
-    h1 {
-        font-size: 24px;
-        margin-top: 40px;
-    }
-
-    p {
-        font-size: 16px;
-        padding: 10px;
-    }
-
-    .buttons {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-    }
-
-    button {
-        width: 90%;
-        font-size: 16px;
-        padding: 12px;
-    }
-
-    #result {
-        font-size: 24px;
-        padding: 30px;
-        max-width: 100%;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .subtitle {
-        font-size: 28px;
-        padding-bottom: 20px;
-    }
-
-    footer a {
-        font-size: 14px;
-        padding: 10px;
-    }
-}
-
-
-/* Унификация внешнего вида кнопок на всех устройствах */
-button {
-  appearance: none;
-  -webkit-appearance: none;
-  background-color: #333 !important;
-  color: white !important;
-  border: none;
-  border-radius: 6px;
-  padding: 12px 24px;
-  font-size: 16px;
-  cursor: pointer;
-  text-align: center;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-</style>
-<link href="https://fonts.googleapis.com/css2?family=Indie+Flower&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&amp;display=swap" rel="stylesheet"/></head>
-<body>
-<h1>Что почитать?</h1><p style="font-size: 18px; max-width: 600px; margin: 20px auto; background: rgba(255,255,255,0.5); padding: 15px; border-radius: 10px; color: #000;">Нажмите на одну из кнопок ниже — и вы получите случайную книгу из выбранной категории. Это может быть классика, триллер или что-то неожиданное. Просто доверьтесь рандому :)</p>
-<div class="buttons">
-<button onclick="showRandomBook(books)"><svg fill="currentColor" height="20" viewbox="0 0 16 16" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M1 2.828c.885-.37 2.154-.828 4-.828s3.115.457 4 .828V14c-.885-.37-2.154-.828-4-.828s-3.115.457-4 .828V2.828z"></path><path d="M9 2.828c.885-.37 2.154-.828 4-.828s3.115.457 4 .828V14c-.885-.37-2.154-.828-4-.828s-3.115.457-4 .828V2.828z"></path></svg> Хочу что-то серьёзное</button>
-<button onclick="showRandomBook(ya_books)"><svg fill="#ff69b4" height="20" viewbox="0 0 16 16" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M8 2.748-.717-6.737C5.6-.281 8 2.223 8 2.223s2.4-2.504 6.717-5.96C8-3.248 8 2.748 8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143a.8.8 0 0 1 .352.357c.147-.221.339-.428.561-.624C12.72-3.042 23.333 4.867 8 15z"></path></svg> Хочу Young Adult</button>
-<button onclick="showRandomBook(detective_books)"><svg fill="#000000" height="20" viewbox="0 0 16 16" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M6.5 2a.5.5 0 0 1 .5.5V3h2v-.5a.5.5 0 0 1 1 0V3h1.5a.5.5 0 0 1 .5.5v.5H4V3.5a.5.5 0 0 1 .5-.5H6v-.5a.5.5 0 0 1 .5-.5z"></path><path d="M3 5h10v.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V5zm1 1v1h8V6H4zm0 2v.5a.5.5 0 0 0 .5.5h.732c-.16.207-.287.433-.377.672A4.5 4.5 0 0 0 8 14.5c1.503 0 2.831-.713 3.645-1.828a4.577 4.577 0 0 0-.377-.672h.732a.5.5 0 0 0 .5-.5V8H4z"></path></svg> Хочу детектив</button>
-<button onclick="showRandomBook(thriller_books)"><svg fill="#999" height="20" viewbox="0 0 16 16" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M8 0a5 5 0 0 0-5 5v10l1-1 1 1 1-1 1 1 1-1 1 1 1-1 1 1V5a5 5 0 0 0-5-5zM5.5 7a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0zm5 0a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"></path></svg> Хочу ужасов и триллеров</button>
-</div>
-<div id="result"></div>
-<div class="subtitle">l’appel du vide</div>
-<footer style="margin-top: 100px; padding: 40px; font-size: 14px; text-align: center; color: #111111;">
-<a href="https://instagram.com/acidandglue" style="
-            color: #111111;
-            background-color: transparent;
             padding: 10px 20px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: normal;
-            transition: opacity 0.3s ease;
-        " target="_blank">Instagram @acidandglue</a>
-</footer><script src="book_list.js"></script><script src="ya_book_list.js"></script><script src="detective_books.js"></script><script src="thriller_books.js"></script>
+            margin: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #444;
+        }
+        #result {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(0,0,0,0.6);
+        }
+        #book-cover {
+            margin-top: 15px;
+            max-width: 160px;
+        }
+        footer {
+            position: fixed;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <div class="intro">Bienvenue dans l’appel du vide</div>
+    <h1>Что почитать?</h1>
+    <div class="instructions">
+        Нажмите на одну из кнопок ниже — и вы получите случайную книгу из выбранной категории.<br>
+        Это может быть классика, триллер или что-то неожиданное. Просто доверьтесь рандому :)
+    </div>
+    <div class="button-group">
+        <button onclick="recommend('serious')">Хочу что-то серьёзное</button>
+        <button onclick="recommend('ya')">Хочу Young Adult</button>
+        <button onclick="recommend('detective')">Хочу детектив</button>
+        <button onclick="recommend('thriller')">Хочу ужасов и триллеров</button>
+    </div>
+    <div id="result"></div>
+    <footer>Instagram @acidandglue</footer>
 
-
-<script>
-function showRandomBook(list) {
-  const result = document.getElementById("result");
-  result.innerHTML = "";
-  result.style.display = 'block';
-
-  const randomBook = list[Math.floor(Math.random() * list.length)];
-  fetchBookInfo(randomBook);
-}
-
-function fetchBookInfo(title) {
-  const result = document.getElementById("result");
-  result.innerHTML = `<strong>${title}</strong><br><br>Ищу описание...`;
-
-  const query = encodeURIComponent(title);
-  const url = `https://www.googleapis.com/books/v1/volumes?q=intitle:${query}`;
-
-  fetch(url)
-    .then(response => response.json())
-    .then(data => {
-      if (data.items && data.items.length > 0) {
-        const book = data.items[0].volumeInfo;
-        const title = book.title || "Без названия";
-        const authors = book.authors ? book.authors.join(", ") : "Автор неизвестен";
-        const description = book.description ? book.description.substring(0, 300) + "..." : "Описание не найдено.";
-        const cover = book.imageLinks?.thumbnail || "";
-        const link = book.infoLink || "#";
-
-        result.innerHTML = `
-          <h2>«${title}» — ${authors}</h2>
-          <p style="font-size: 18px; font-weight: normal;">${description}</p>
-          ${cover ? `<img src="${cover}" alt="Обложка">` : ""}
-          <p><a href="${link}" target="_blank" style="color: #0033cc; font-weight: bold;">Подробнее</a></p>
-        `;
-      } else {
-        result.innerHTML += "<br><em>Информация о книге не найдена в Google Books.</em>";
-      }
-    })
-    .catch(err => {
-      console.error("Ошибка при получении книги:", err);
-      result.innerHTML += "<br><em>Произошла ошибка при загрузке информации.</em>";
-    });
-}
-</script>
+    <script src="books_with_api.js"></script>
 </body>
 </html>
