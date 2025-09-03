@@ -1994,8 +1994,27 @@ async function tryFetchAndPick(url, { title, author }) {
   const r = await fetch(url);
   if (!r.ok) return null;
   const data = await r.json();
-  const items = (data.items || []).map(wrapVolume).filter(filterLikelyMatch({ title, author }));
-  return items[0] || null;
+  const all = (data.items || []).map(wrapVolume).filter(filterLikelyMatch({ title, author }));
+  if (!all.length) return null;
+
+  // 1) сперва те, у кого ЕСТЬ описание
+  const withDesc = all.filter(x => x.description && x.description.length > 30);
+  if (withDesc.length) {
+    // среди них предпочитаем те, у кого есть обложка и норм. объём
+    withDesc.sort((a,b) => (+(!!b.image) - +(!!a.image)) || (b.pageCount - a.pageCount));
+    return withDesc[0];
+  }
+
+  // 2) затем те, у кого есть обложка
+  const withImg = all.filter(x => x.image);
+  if (withImg.length) {
+    withImg.sort((a,b) => (b.pageCount - a.pageCount));
+    return withImg[0];
+  }
+
+  // 3) иначе — просто самый «толстый»
+  all.sort((a,b) => (b.pageCount - a.pageCount));
+  return all[0];
 }
 
 async function searchGoogleBooks({ title, author, isbn }) {
