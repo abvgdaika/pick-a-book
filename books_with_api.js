@@ -1866,17 +1866,223 @@ const books = {
 };
 
 
-// === ДОБАВИТЬ/ЗАМЕНИТЬ: более «умный» поиск с догрузкой описания ===
+/*******************************
+ * books_with_api.js  (ONE ARRAY)
+ * Работает с ОДНИМ глобальным массивом книг.
+ * Имя переменной не важно — код сам найдёт его.
+ *******************************/
 
-async function searchGoogleBooks({ title, author, isbn }) {
+/* ========= Настройки ========= */
+const GOOGLE_API_KEY = "";                // можно оставить пустым
+const LANGS = ["ru","lv","en"];           // приоритет языков
+const NEGATIVE = "-magazine -periodical -journal -gardening";
+
+// Принудительные фиксы для капризных названий: "название|автор" -> { gbooksId/isbn }
+const KNOWN = {
+  "оно|стивен кинг": { gbooksId: "m2oFEAAAQBAJ" } // It / Оно
+};
+
+/* ========= Утилиты ========= */
+const clean = s => (s||"").replace(/\s+/g," ").trim();
+const norm  = s => clean(s).toLowerCase().replace(/ё/g,"е");
+const $id   = id => document.getElementById(id);
+function sample(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function escapeHtml(s){ return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
+
+/* ========= Поиск твоего ЕДИНСТВЕННОГО массива =========
+   Логика: ищем в window первый большой массив (>=50 эл.),
+   где каждый элемент — строка или объект.
+   Если больших нет — берём самый «похожий» по содержимому.
+*/
+function findSingleArray(){
+  let guess = null, bestScore = -1;
+  for (const key in window){
+    const v = window[key];
+    if (!Array.isArray(v)) continue;
+    const len = v.length || 0;
+    if (!len) continue;
+
+    // Считаем «похожесть» на массив книг
+    let score = 0;
+    if (len >= 50) score += 3; else if (len >= 10) score += 1;
+
+    const head = v.slice(0, 20);
+    const objCount = head.filter(x => x && typeof x === "object").length;
+    const strCount = head.filter(x => typeof x === "string").length;
+
+    // Объекты с ключами title/author/category — жирный плюс
+    const withTitle = head.filter(x => x && typeof x === "object" && ("title" in x || "название" in x)).length;
+    const withAuthor = head.filter(x => x && typeof x === "object" && ("author" in x || "автор" in x)).length;
+    const withCat = head.filter(x => x && typeof x === "object" && ("category" in x || "категория" in x || "genre" in x)).length;
+
+    score += objCount ? 2 : 0;
+    score += strCount ? 1 : 0;
+    score += withTitle ? 2 : 0;
+    score += withAuthor ? 1 : 0;
+    score += withCat ? 1 : 0;
+
+    if (score > bestScore){ bestScore = score; guess = v; }
+  }
+  return guess || [];
+}
+const SINGLE_ARRAY = findSingleArray();
+
+/* ========= Категории и сопоставление ========= */
+const CAT_ALIASES = {
+  serious: ["serious","серьёзное","серьезное","classic","классика","литература"],
+  ya: ["ya","young adult","юа","тин","подростковое","янг эдалт"],
+  detective: ["detective","детектив","криминал","криминальний"],
+  thriller: ["thriller","ужасы","хоррор","триллер","ужасы/триллер"]
+};
+
+// возвращает ID категории, к которой ид принадлежит слово (или null)
+function mapToCatId(val){
+  const s = norm(val||"");
+  for (const id in CAT_ALIASES){
+    if (CAT_ALIASES[id].some(a => s.includes(a))) return id;
+  }
+  return null;
+}
+
+/* ========= Нормализация элемента и категория ========= */
+function asEntry(item){
+  if (typeof item === "string"){
+    // пробуем распарсить "Название — Автор [категория?]"
+    // форматы: "Название — Автор", "Название - Автор", "[thriller] Название — Автор"
+    const str = item.trim();
+
+    // категория в квадратных скобках
+    let cat = null;
+    const mCat = str.match(/^\\s*\\[([^\\]]+)\\]\\s*(.*)$/);
+    const body = mCat ? mCat[2] : str;
+    if (mCat) cat = mapToCatId(mCat[1]);
+
+    // название — автор
+    const m = body.match(/^(.*?)\\s*[—-]\\s*(.+)$/);
+    const title = m ? m[1].trim() : body;
+    const author = m ? m[2].trim() : "";
+
+    return { title, author, category: cat };
+  }
+  // объект
+  const o = { ...item };
+  // если ключи по-русски
+  if (!o.title && o["название"]) o.title = o["название"];
+  if (!o.author && o["автор"]) o.author = o["автор"];
+  if (!o.category && (o["категория"] || o.genre)) o.category = o["категория"] || o.genre;
+  if (o.category && typeof o.category === "string"){
+    // нормализуем текстовую категорию в один из наших id
+    const mapped = mapToCatId(o.category);
+    if (mapped) o.category = mapped;
+  }
+  return o;
+}
+
+function entryCategory(e){
+  // e.category может быть строкой id; если пусто — пытаемся угадать из title/author
+  if (e.category) return e.category;
+  const hint = mapToCatId(e.title) || mapToCatId(e.author);
+  return hint || null;
+}
+
+/* ========= Получение списка по категории из ОДНОГО массива ========= */
+function getListOneArray(categoryId){
+  // фильтруем по category, если она есть; иначе — берём весь массив
+  const out = [];
+  for (const it of SINGLE_ARRAY){
+    const e = asEntry(it);
+    const cat = entryCategory(e);
+    if (!cat) { out.push(e); continue; } // если нет категории — не режем (чтобы не терять книги)
+    if (cat === categoryId) out.push(e);
+  }
+  // если после фильтра пусто — вернём весь массив (чтобы сайт не был «мёртвым»)
+  return out.length ? out : SINGLE_ARRAY.map(asEntry);
+}
+
+/* ========= Рендер ========= */
+function showLoading(entry){
+  const result = $id("result");
+  if (!result) return;
+  result.style.display = "block";
+  result.innerHTML = `
+    <h2>«${escapeHtml(entry.title||"Без названия")}»${entry.author ? " — " + escapeHtml(entry.author) : ""}</h2>
+    <p><em>Ищу описание…</em></p>
+  `;
+}
+
+function renderResult(book, entry){
+  const result = $id("result");
+  if (!result) return;
+
+  if (!book){
+    result.style.display = "block";
+    result.innerHTML = `
+      <h2>«${escapeHtml(entry.title||"Без названия")}»${entry.author ? " — " + escapeHtml(entry.author) : ""}</h2>
+      <p><em>Информация не найдена.</em></p>
+    `;
+    return;
+  }
+
+  const title = book.title || entry.title || "Без названия";
+  const authors = (book.authors && book.authors.length) ? book.authors.join(", ") : (entry.author || "Автор неизвестен");
+  const description = book.description
+    ? (book.description.length > 1200 ? book.description.slice(0,1200) + "…" : book.description)
+    : "Описание недоступно.";
+  const cover = book.image || entry.cover || "";
+  const link  = book.infoLink || "";
+
+  result.style.display = "block";
+  result.innerHTML = `
+    <h2>«${escapeHtml(title)}» — ${escapeHtml(authors)}</h2>
+    <p style="font-size:18px;">${escapeHtml(description)}</p>
+    ${cover ? `<img id="book-cover" src="${cover}" alt="Обложка книги">` : ""}
+    ${link ? `<p><a href="${link}" target="_blank" style="color:#0033cc;font-weight:bold;">Подробнее</a></p>` : ""}
+  `;
+}
+
+/* ========= Google Books ========= */
+async function fetchByIdOrIsbn({ gbooksId, isbn }){
+  if (gbooksId){
+    const u = new URL(`https://www.googleapis.com/books/v1/volumes/${encodeURIComponent(gbooksId)}`);
+    if (GOOGLE_API_KEY) u.searchParams.set("key", GOOGLE_API_KEY);
+    const r = await fetch(u);
+    if (!r.ok) throw new Error("GB volume fetch failed");
+    const data = await r.json();
+    return wrapVolume(data);
+  }
+  if (isbn){
+    const found = await searchGoogleBooks({ isbn });
+    if (!found) throw new Error("ISBN not found");
+    return found;
+  }
+  throw new Error("No gbooksId or isbn");
+}
+
+async function fetchFullById(id){
+  const u = new URL(`https://www.googleapis.com/books/v1/volumes/${encodeURIComponent(id)}`);
+  if (GOOGLE_API_KEY) u.searchParams.set("key", GOOGLE_API_KEY);
+  const r = await fetch(u);
+  if (!r.ok) return null;
+  return wrapVolume(await r.json());
+}
+
+async function tryFetchAndPick(url, { title, author }){
+  const r = await fetch(url);
+  if (!r.ok) return null;
+  const data = await r.json();
+  const items = (data.items||[]).map(wrapVolume).filter(filterLikelyMatch({ title, author }));
+  return items[0] || null;
+}
+
+async function searchGoogleBooks({ title, author, isbn }){
   const base = new URL("https://www.googleapis.com/books/v1/volumes");
 
-  if (isbn) {
+  if (isbn){
     base.searchParams.set("q", `isbn:${isbn}`);
   } else {
     const parts = [];
-    if (title)  parts.push(`intitle:"${title.replace(/"/g, "")}"`);
-    if (author) parts.push(`inauthor:"${author.replace(/"/g, "")}"`);
+    if (title)  parts.push(`intitle:"${title.replace(/"/g,"")}"`);
+    if (author) parts.push(`inauthor:"${author.replace(/"/g,"")}"`);
     parts.push(NEGATIVE);
     base.searchParams.set("q", parts.join(" "));
   }
@@ -1884,49 +2090,110 @@ async function searchGoogleBooks({ title, author, isbn }) {
   base.searchParams.set("printType", "books");
   base.searchParams.set("maxResults", "10");
   base.searchParams.set("orderBy", "relevance");
-  // ВАЖНО: убрали projection=lite, чтобы чаще получать description
   if (GOOGLE_API_KEY) base.searchParams.set("key", GOOGLE_API_KEY);
 
-  // 1) Пробуем предпочитаемые языки по очереди
-  for (const lang of LANGS) {
-    const u = new URL(base);
-    u.searchParams.set("langRestrict", lang);
+  // 1) Пробуем языки по приоритету
+  for (const lang of LANGS){
+    const u = new URL(base); u.searchParams.set("langRestrict", lang);
     const picked = await tryFetchAndPick(u, { title, author });
-    if (picked) {
-      // Если описания нет — подтягиваем том заново целиком по id
-      if (!picked.description && picked.id) {
+    if (picked){
+      if (!picked.description && picked.id){
         const full = await fetchFullById(picked.id);
         if (full && full.description) return full;
       }
       return picked;
     }
   }
-
-  // 2) Без ограничения языка (часто даёт англ. издание с норм описанием)
+  // 2) Без ограничений языка
   const picked = await tryFetchAndPick(base, { title, author });
-  if (picked && !picked.description && picked.id) {
+  if (picked && !picked.description && picked.id){
     const full = await fetchFullById(picked.id);
     return full || picked;
   }
   return picked || null;
 }
 
-async function tryFetchAndPick(url, { title, author }) {
-  const r = await fetch(url);
-  if (!r.ok) return null;
-  const data = await r.json();
-  const items = (data.items || [])
-    .map(wrapVolume)
-    .filter(filterLikelyMatch({ title, author }));
-  return items[0] || null;
+function wrapVolume(item){
+  const v = item.volumeInfo || {};
+  return {
+    id: item.id,
+    title: clean(v.title),
+    authors: (v.authors||[]).map(clean),
+    lang: v.language || "",
+    categories: v.categories || [],
+    pageCount: v.pageCount || 0,
+    printType: v.printType || "",
+    description: clean(v.description || ""),
+    image: (v.imageLinks && (v.imageLinks.thumbnail || v.imageLinks.smallThumbnail)) || "",
+    infoLink: v.infoLink || item.selfLink || ""
+  };
 }
 
-// ДОБАВИТЬ: отдельный запрос по id, чтобы вытащить полное описание
-async function fetchFullById(id) {
-  const u = new URL(`https://www.googleapis.com/books/v1/volumes/${encodeURIComponent(id)}`);
-  if (GOOGLE_API_KEY) u.searchParams.set("key", GOOGLE_API_KEY);
-  const r = await fetch(u);
-  if (!r.ok) return null;
-  const data = await r.json();
-  return wrapVolume(data);
+function filterLikelyMatch({ title, author }){
+  const nt = norm(title||"");
+  const na = norm(author||"");
+  return x => {
+    if (x.printType && x.printType.toLowerCase() !== "book") return false;
+    const cats = (x.categories||[]).join(" ").toLowerCase();
+    if (/garden|сад|огород|periodical|magazine|журнал/.test(cats)) return false;
+    if (x.pageCount && x.pageCount < 80) return false;
+    const tOk = nt ? norm(x.title).includes(nt) : true;
+    const aOk = na ? (x.authors||[]).some(a => norm(a).includes(na) || na.includes(norm(a))) : true;
+    return tOk && aOk;
+  };
 }
+
+function decorateWithManuals(vol, entry){
+  const out = vol ? { ...vol } : {
+    title: entry.title,
+    authors: entry.author ? [entry.author] : [],
+    description: "",
+    image: "",
+    infoLink: "#",
+    printType: "book"
+  };
+  if (entry.description) out.description = entry.description;
+  if (entry.cover) out.image = entry.cover;
+  return out;
+}
+
+/* ========= Главная функция для кнопок ========= */
+async function recommend(categoryId){
+  const result = $id("result");
+  if (!result) return;
+
+  // берём список из ОДНОГО массива
+  const list = getListOneArray(categoryId);
+  if (!Array.isArray(list) || list.length === 0){
+    result.style.display = "block";
+    result.innerHTML = "<em>Список пуст для этой категории.</em>";
+    return;
+  }
+
+  const entry = asEntry(sample(list));
+  showLoading(entry);
+
+  try{
+    const key = norm(entry.title) + "|" + norm(entry.author||"");
+    if (KNOWN[key]){
+      const vol = await fetchByIdOrIsbn(KNOWN[key]);
+      return renderResult(decorateWithManuals(vol, entry), entry);
+    }
+    if (entry.gbooksId || entry.isbn){
+      const vol = await fetchByIdOrIsbn(entry);
+      return renderResult(decorateWithManuals(vol, entry), entry);
+    }
+    const found = await searchGoogleBooks({ title: entry.title, author: entry.author||"" });
+    return renderResult(decorateWithManuals(found, entry), entry);
+  } catch(err){
+    console.error(err);
+    result.style.display = "block";
+    result.innerHTML = `
+      <h2>«${escapeHtml(entry.title)}»${entry.author ? " — " + escapeHtml(entry.author) : ""}</h2>
+      <p><em>Ошибка при загрузке информации из Google Books.</em></p>
+    `;
+  }
+}
+
+// экспорт для inline-обработчиков
+window.recommend = recommend;
