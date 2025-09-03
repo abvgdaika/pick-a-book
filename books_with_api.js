@@ -1864,7 +1864,7 @@ const books = {
         }
     ]
 };
-
+window.books = books;
 
 /*******************************
  * books_with_api.js  (ONE ARRAY)
