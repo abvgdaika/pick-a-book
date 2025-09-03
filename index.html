@@ -1,109 +1,435 @@
-
-<!DOCTYPE html>
-
-<html lang="ru">
+<!doctype html>
+<html lang="ru" class="h-full">
 <head>
-<meta charset="utf-8"/>
-<title>Pick a book</title>
-<link href="https://fonts.googleapis.com/css2?family=Homemade+Apple&amp;display=swap" rel="stylesheet"/>
-<style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: url('848A503B-8110-4E0A-992C-1CBFA22380C6.jpeg') no-repeat center center fixed;
-            background-size: cover;
-            font-family: Arial, sans-serif;
-            color: #fff;
-            text-align: center;
-        }
-        h1 {
-            margin-top: 30px;
-            font-size: 32px;
-        }
-        .intro {
-            font-family: 'Homemade Apple', cursive;
-            font-size: 26px;
-            margin: 20px 0 10px 0;
-        }
-        .instructions {
-            margin-bottom: 20px;
-            font-size: 14px;
-            color: #ddd;
-        }
-        .button-group {
-            margin: 20px 0;
-        }
-        button {
-            background: #222;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            margin: 5px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        button:hover {
-            background: #444;
-        }
-        #result {
-            margin-top: 30px;
-            padding: 20px;
-            background: rgba(0,0,0,0.6);
-        }
-        #book-cover {
-            margin-top: 15px;
-            max-width: 160px;
-        }
-        footer {
-            position: fixed;
-            bottom: 10px;
-            width: 100%;
-            text-align: center;
-            font-size: 12px;
-            color: #aaa;
-        }
-    </style>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/><style>
-body {
-  max-width: 100%;
-  overflow-x: hidden;
-}
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Выбери книгу · v2</title>
+  <meta name="color-scheme" content="dark light" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b0c10; --panel:#12131a; --ink:#e6e8ef; --muted:#9aa4b2; --accent:#8b5cf6; --accent-2:#22d3ee; --ok:#22c55e; --err:#ef4444;
+      --ring: 0 0 0 2px rgba(139,92,246,.5);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:radial-gradient(1200px 800px at 120% -10%, rgba(34,211,238,.08), transparent),
+                     radial-gradient(1000px 700px at -20% 110%, rgba(139,92,246,.10), transparent), var(--bg);
+         color:var(--ink); font:16px/1.5 Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}
+    .wrap{max-width:960px;margin:0 auto;padding:40px 20px}
+    header{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:20px}
+    .brand{display:flex;align-items:center;gap:14px}
+    .logo{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+          box-shadow:0 10px 30px rgba(139,92,246,.3), inset 0 0 0 1px rgba(255,255,255,.12)}
+    h1{font-family:"DM Serif Display", Georgia, serif; font-size:28px; letter-spacing:.2px; margin:0}
+    .sub{color:var(--muted); font-size:14px}
 
-.container, .book-display, .footer {
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
+    .toolbar{display:flex;gap:12px;align-items:center}
+    .toggle{display:inline-flex; align-items:center; gap:8px; color:var(--muted); font-size:14px}
 
-.book-card {
-  width: 100%;
-  max-width: 600px;
-  margin: auto;
-}
+    .panel{background:rgba(18,19,26,.75); backdrop-filter: blur(10px);
+           border:1px solid rgba(255,255,255,.08); border-radius:20px; padding:18px}
 
-@media (max-width: 768px) {
-  .book-title, .book-author {
-    font-size: 1rem;
-  }
-  h1 {
-    font-size: 1.5rem;
-  }
-}
-</style></head>
+    .grid{display:grid; gap:12px; grid-template-columns:repeat(2,minmax(0,1fr))}
+    @media (max-width:640px){ .grid{grid-template-columns:1fr} }
+
+    button.btn{appearance:none; border:1px solid rgba(255,255,255,.08); width:100%;
+               color:var(--ink); background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.00));
+               padding:16px 18px; border-radius:16px; font-weight:600; letter-spacing:.2px; cursor:pointer;
+               transition: transform .08s ease, border-color .2s ease, box-shadow .2s ease}
+    button.btn:hover{border-color:rgba(255,255,255,.18)}
+    button.btn:active{transform:translateY(1px)}
+    button.btn:focus-visible{outline:none; box-shadow:var(--ring)}
+
+    .result{display:grid; grid-template-columns:120px 1fr; gap:16px; align-items:start}
+    @media (max-width:640px){ .result{grid-template-columns:80px 1fr} }
+    .cover{width:100%; aspect-ratio:2/3; border-radius:12px; background:#0d0f14; object-fit:cover; border:1px solid rgba(255,255,255,.08)}
+    .title{font-weight:700; font-size:18px; margin:2px 0 4px}
+    .meta{color:var(--muted); font-size:14px}
+    .desc{margin-top:10px; color:#ccd2dd}
+    .actions{display:flex; gap:10px; margin-top:12px}
+    .actions button{flex:0 0 auto}
+    .ghost{background:transparent}
+
+    .chips{display:flex; gap:8px; flex-wrap:wrap; margin:12px 0}
+    .chip{font-size:12px; color:var(--muted); border:1px solid rgba(255,255,255,.08); padding:6px 10px; border-radius:999px}
+
+    .search{display:flex; gap:8px; margin:10px 0 18px}
+    .search input{flex:1 1 auto; border:1px solid rgba(255,255,255,.12); background:#0f1117; color:var(--ink);
+                  padding:12px 14px; border-radius:12px}
+    .search input:focus{outline:none; box-shadow:var(--ring)}
+    .search button{flex:0 0 auto}
+
+    .note{font-size:12px; color:var(--muted); margin-top:6px}
+    .empty{color:var(--muted); padding:12px}
+
+    footer{margin-top:32px; color:var(--muted); font-size:12px; display:flex; align-items:center; gap:10px; justify-content:space-between}
+    a{color:#a78bfa; text-decoration:none}
+    a:hover{text-decoration:underline}
+  </style>
+
+  <!-- Plausible analytics (privacy‑friendly). Replace data-domain with your domain. -->
+  <!-- <script defer data-domain="your-domain.example" src="https://plausible.io/js/script.js"></script> -->
+  <!-- GA4 (if предпочитаешь Google): вставь свой ID вместо G-XXXXXX. -->
+  <!--
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);} gtag('js', new Date());
+    gtag('config', 'G-XXXXXX');
+  </script>
+  -->
+</head>
 <body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Выбери книгу</h1>
+          <div class="sub">Готифутуристичный рандомайзер с понятным поиском</div>
+        </div>
+      </div>
+      <div class="toolbar">
+        <label class="toggle"><input id="themeToggle" type="checkbox" /> Тёмная тема</label>
+      </div>
+    </header>
 
-<h1>Что почитать?</h1>
-<div class="instructions">
-        Нажмите на одну из кнопок ниже — и вы получите случайную книгу из выбранной категории.<br/>
-        Это может быть классика, триллер или что-то неожиданное. Просто доверьтесь рандому :)
+    <div class="panel">
+      <div class="search">
+        <input id="q" placeholder="Название или автор (опционально)" />
+        <button id="searchBtn" class="btn">Найти</button>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div class="grid" id="categories"></div>
     </div>
-<div class="button-group">
-<button onclick="recommend('serious')">Хочу что-то серьёзное</button>
-<button onclick="recommend('ya')">Хочу Young Adult</button>
-<button onclick="recommend('detective')">Хочу детектив</button>
-<button onclick="recommend('thriller')">Хочу ужасов и триллеров</button>
-</div>
-<div id="result"></div>
-<footer><a href="https://www.instagram.com/acidandglue" target="_blank">@acidandglue</a></footer>
-<script src="books_with_api.js"></script>
+
+    <div class="panel" style="margin-top:12px">
+      <div id="result" class="empty">Здесь появится рекомендация. Выбери категорию или попробуй поиск.</div>
+    </div>
+
+    <footer>
+      <div>v2 · обновлённый дизайн, чистый Google Books, мануальные описания, аналитика</div>
+      <div><a href="https://github.com/abvgdaika/pick-a-book" target="_blank" rel="noopener">GitHub</a></div>
+    </footer>
+  </div>
+
+<script>
+/********************
+ * Конфиг и данные  *
+ ********************/
+const CONFIG = {
+  // Опционально: добавь сюда свой Google Books API ключ. Без него тоже работает, но есть квоты.
+  GOOGLE_API_KEY: "",
+  // Предпочитаемые языки для результатов
+  LANGS: ["ru", "lv", "en"],
+  // Категории (можно править/добавлять)
+  CATEGORIES: [
+    { id: "serious", label: "Серьёзное" },
+    { id: "ya", label: "YA" },
+    { id: "detective", label: "Детектив" },
+    { id: "thriller", label: "Ужасы/Триллер" },
+    { id: "romance", label: "Романтика" },
+    { id: "nonfiction", label: "Нон-фикшн" }
+  ]
+};
+
+// База книг. Теперь объектная, с возможностью мануального описания и «жёсткой привязки» к книге через volumeId или ISBN
+// Если указать gbooksId — берём ровно этот том, без поиска. Если isbn — ищем по isbn.
+// description — твой текст. Если есть, он перезапишет Google Books описание.
+const BOOKS = [
+  { title: "Оно", author: "Стивен Кинг", category: "thriller", isbn: "9781501142970", description: "Дети Дерри сталкиваются с древним Злом, которое возвращается каждые 27 лет. Роман про страх, дружбу и храбрость, выросший вместе со своими героями." },
+  { title: "Шестёрка воронов", author: "Ли Бардуго", category: "ya", isbn: "9781780622286" },
+  { title: "Мастер и Маргарита", author: "Михаил Булгаков", category: "serious" },
+  { title: "Десять негритят", author: "Агата Кристи", category: "detective", isbn: "9780007136834" },
+  { title: "Мы", author: "Евгений Замятин", category: "serious" },
+  { title: "Тихий дон", author: "Михаил Шолохов", category: "serious" },
+  { title: "Унесённые ветром", author: "Маргарет Митчелл", category: "serious", isbn: "9781451635621" },
+];
+
+/********************
+ * Утилиты & аналитика *
+ ********************/
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+const analytics = {
+  event(name, payload={}){
+    // Plausible
+    if (window.plausible) plausible(name, { props: payload });
+    // GA4
+    if (window.gtag) gtag('event', name, payload);
+  }
+};
+
+function sample(arr){return arr[Math.floor(Math.random()*arr.length)];}
+
+function cleanText(s){return (s||"").replace(/\s+/g,' ').trim();}
+
+function prefers(lang){return CONFIG.LANGS.indexOf(lang.toLowerCase());}
+
+/********************
+ * Google Books API  *
+ ********************/
+async function fetchByVolumeId(id){
+  const url = new URL(`https://www.googleapis.com/books/v1/volumes/${encodeURIComponent(id)}`);
+  if (CONFIG.GOOGLE_API_KEY) url.searchParams.set('key', CONFIG.GOOGLE_API_KEY);
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('GB volumes get failed');
+  return await r.json();
+}
+
+async function searchGoogleBooks({title, author, isbn}){
+  // Строим максимально точный запрос: intitle + inauthor, или isbn
+  const url = new URL('https://www.googleapis.com/books/v1/volumes');
+  if (isbn){
+    url.searchParams.set('q', `isbn:${isbn}`);
+  } else {
+    let q = [];
+    if (title) q.push(`intitle:"${title.replace(/"/g,'')}"`);
+    if (author) q.push(`inauthor:"${author.replace(/"/g,'')}"`);
+    // негативные ключи, чтобы не ловить журналы/садоводство и т.п.
+    q.push('-magazine -periodical -journal -gardening');
+    url.searchParams.set('q', q.join(' '));
+  }
+  url.searchParams.set('printType','books'); // только книги
+  url.searchParams.set('maxResults','10');
+  url.searchParams.set('orderBy','relevance');
+  url.searchParams.set('projection','lite');
+  if (CONFIG.GOOGLE_API_KEY) url.searchParams.set('key', CONFIG.GOOGLE_API_KEY);
+
+  // пытаемся подряд с языковыми ограничениями, чтобы сначала получить RU/LV/EN
+  for (const lang of CONFIG.LANGS){
+    const u = new URL(url);
+    u.searchParams.set('langRestrict', lang);
+    const r = await fetch(u);
+    if (!r.ok) continue;
+    const data = await r.json();
+    const items = (data.items||[])
+      .map(wrapVolume)
+      .filter(filterLikelyMatch({title, author}));
+    if (items.length) return items[0];
+  }
+
+  // без langRestrict — последняя попытка
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('GB search failed');
+  const data = await r.json();
+  const items = (data.items||[])
+    .map(wrapVolume)
+    .filter(filterLikelyMatch({title, author}));
+  return items[0] || null;
+}
+
+function wrapVolume(item){
+  const v = item.volumeInfo || {};
+  return {
+    id: item.id,
+    title: cleanText(v.title),
+    authors: (v.authors||[]).map(cleanText),
+    lang: v.language,
+    categories: v.categories||[],
+    pageCount: v.pageCount||0,
+    printType: v.printType,
+    description: cleanText(v.description||""),
+    image: v.imageLinks?.thumbnail || v.imageLinks?.smallThumbnail || "",
+    infoLink: v.infoLink || item.selfLink
+  };
+}
+
+function normalize(s){return cleanText(s).toLowerCase().replace(/ё/g,'е');}
+
+function filterLikelyMatch({title, author}){
+  const nt = normalize(title||"");
+  const na = normalize(author||"");
+  return (x)=>{
+    // отсев периодики
+    if (x.printType && x.printType.toLowerCase() !== 'book') return false;
+    // отсев подозрительных категорий (садоводство и т.п.)
+    const cats = (x.categories||[]).join(' ').toLowerCase();
+    if (/garden|сад|огород|periodical|magazine|журнал/.test(cats)) return false;
+    // минимальная длина
+    if (x.pageCount && x.pageCount<80) return false;
+    // заголовок должен частично совпадать
+    const tOk = nt ? normalize(x.title).includes(nt) : true;
+    // автор — хотя бы один совпадает по фамилии/ключевому слову
+    const aOk = na ? (x.authors||[]).some(a=>normalize(a).includes(na) || normalize(na).includes(normalize(a))) : true;
+    return tOk && aOk;
+  }
+}
+
+/********************
+ * Рекомендации      *
+ ********************/
+function renderCategories(){
+  const root = $('#categories');
+  root.innerHTML = '';
+  CONFIG.CATEGORIES.forEach(cat=>{
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.textContent = cat.label;
+    btn.addEventListener('click', ()=>{
+      analytics.event('pick_category', {category: cat.id});
+      recommendByCategory(cat.id);
+    });
+    root.appendChild(btn);
+  });
+}
+
+function renderChips(){
+  const root = $('#chips');
+  root.innerHTML = '';
+  CONFIG.CATEGORIES.forEach(cat=>{
+    const el = document.createElement('div');
+    el.className = 'chip';
+    el.textContent = cat.label;
+    el.addEventListener('click', ()=>{
+      analytics.event('chip_category', {category: cat.id});
+      recommendByCategory(cat.id);
+    });
+    root.appendChild(el);
+  });
+}
+
+async function recommendByCategory(category){
+  const pool = BOOKS.filter(b=>b.category===category);
+  if (!pool.length) return renderEmpty('Для этой категории пока пусто.');
+  const pick = sample(pool);
+  const data = await hydrateBook(pick);
+  renderResult(data, pick);
+}
+
+async function hydrateBook(entry){
+  // 1) Жёсткая привязка по volumeId
+  if (entry.gbooksId){
+    const vol = wrapVolume(await fetchByVolumeId(entry.gbooksId));
+    return decorateWithManuals(vol, entry);
+  }
+  // 2) Поиск по ISBN
+  if (entry.isbn){
+    const found = await searchGoogleBooks({ isbn: entry.isbn });
+    if (found) return decorateWithManuals(found, entry);
+  }
+  // 3) Поиск по названию+автору
+  const found = await searchGoogleBooks({ title: entry.title, author: entry.author });
+  return decorateWithManuals(found || {
+    id: null,
+    title: entry.title,
+    authors: [entry.author].filter(Boolean),
+    lang: '', categories: [], pageCount: 0, printType: 'book', description: '', image: '', infoLink: ''
+  }, entry);
+}
+
+function decorateWithManuals(vol, entry){
+  const out = {...vol};
+  // если есть ручное описание — оно приоритетнее
+  if (entry.description) out.description = entry.description;
+  // если есть ручная обложка
+  if (entry.cover) out.image = entry.cover;
+  // прокидываем исходные поля
+  out._source = entry;
+  return out;
+}
+
+function renderResult(book, entry){
+  const root = $('#result');
+  if (!book){
+    return renderEmpty('Ничего не нашли. Попробуй другую категорию или поиск.');
+  }
+  const authors = (book.authors||[]).join(', ');
+  root.innerHTML = `
+    <div class="result">
+      <img class="cover" src="${book.image||''}" alt="Обложка" onerror="this.style.display='none'"/>
+      <div>
+        <div class="title">${book.title||entry.title}</div>
+        <div class="meta">${authors||entry.author||''}</div>
+        <div class="chips">
+          ${(book.categories||entry.category?[...(book.categories||[]), entry.category].filter(Boolean):[]) 
+            .slice(0,4).map(c=>`<span class='chip'>${c}</span>`).join('')}
+        </div>
+        <div class="desc">${book.description||'Без описания — но это хороший знак для воображения.'}</div>
+        <div class="actions">
+          ${book.infoLink?`<a class="btn" href="${book.infoLink}" target="_blank" rel="noopener" onclick="track('open_info',{id:'${book.id}'})">Подробнее</a>`:''}
+          <button class="btn ghost" onclick="nextFromSame()">Ещё!</button>
+          <button class="btn ghost" onclick="copyShare()">Поделиться</button>
+        </div>
+        <div class="note">Подбор улучшен: исключаем журналы/садоводство, предпочитаем книги на RU/LV/EN, можно вручную задать описания и ISBN/ID.</div>
+      </div>
+    </div>`;
+  // сохраняем последний контекст для кнопки «Ещё!»
+  window.__lastCategory = entry.category;
+  window.__lastPickTitle = entry.title;
+  analytics.event('show_book', { title: entry.title, author: entry.author||'', category: entry.category||'' });
+}
+
+function renderEmpty(msg){
+  $('#result').innerHTML = `<div class="empty">${msg}</div>`;
+}
+
+async function nextFromSame(){
+  if (!window.__lastCategory) return;
+  analytics.event('next_click', { from: window.__lastCategory, last: window.__lastPickTitle||'' });
+  await recommendByCategory(window.__lastCategory);
+}
+
+async function doSearch(){
+  const q = $('#q').value.trim();
+  if (!q){ renderEmpty('Введите запрос или выберите категорию.'); return; }
+  const [titlePart, authorPart] = q.split('|').map(s=>s? s.trim(): '');
+  const found = await searchGoogleBooks({ title: titlePart||q, author: authorPart||'' });
+  if (!found) return renderEmpty('По запросу ничего не нашлось. Попробуй сузить или уточнить.');
+  renderResult(found, { title: titlePart||found.title, author: authorPart||(found.authors||[])[0]||'', category: 'search' });
+  analytics.event('search', { q });
+}
+
+function copyShare(){
+  const node = $('#result .title');
+  const title = node? node.textContent : 'книга';
+  const url = new URL(location.href);
+  url.searchParams.set('t', title);
+  navigator.clipboard.writeText(url.toString()).then(()=>{
+    analytics.event('share_copy', { title });
+    const btns = $$('#result .actions button, #result .actions a');
+    if (btns[1]){ btns[1].textContent = 'Ссылка скопирована!'; setTimeout(()=>btns[1].textContent='Ещё!',1200); }
+  });
+}
+
+function track(name, payload){ analytics.event(name, payload); }
+
+/********************
+ * Тема             *
+ ********************/
+(function initTheme(){
+  const key = 'pab-theme';
+  const saved = localStorage.getItem(key);
+  const prefersDark = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches;
+  const dark = saved ? saved==='dark' : prefersDark;
+  document.body.classList.toggle('dark', dark);
+  $('#themeToggle').checked = dark;
+  $('#themeToggle').addEventListener('change', (e)=>{
+    const on = !!e.target.checked;
+    document.body.classList.toggle('dark', on);
+    localStorage.setItem(key, on?'dark':'light');
+  });
+})();
+
+/********************
+ * Инициализация    *
+ ********************/
+renderCategories();
+renderChips();
+$('#searchBtn').addEventListener('click', doSearch);
+$('#q').addEventListener('keydown', (e)=>{ if (e.key==='Enter') doSearch(); });
+
+// deep-link по параметру ?t=
+(function deeplink(){
+  const t = new URLSearchParams(location.search).get('t');
+  if (!t) return;
+  $('#q').value = t;
+  doSearch();
+})();
+</script>
 </body>
 </html>
