@@ -1946,6 +1946,7 @@ function mapToCatId(val){
 
 /* ========= Нормализация элемента и категория ========= */
 // Нормализация элемента в объект {title, author, category, ...} БЕЗ регулярных выражений
+// Нормализация элемента в объект {title, author, category, ...} БЕЗ регулярных выражений
 function asEntry(item) {
   if (typeof item === "string") {
     let str = item.trim();
@@ -1962,8 +1963,7 @@ function asEntry(item) {
       }
     }
 
-    // 2) разделитель между названием и автором: ищем длинное тире — , иначе дефис -
-    // берём ПОСЛЕДНЕЕ вхождение, чтобы не ломаться на названиях с дефисами
+    // 2) разделитель между названием и автором — ищем ПОСЛЕДНЕЕ тире: — или -
     let idx = str.lastIndexOf("—");
     if (idx === -1) idx = str.lastIndexOf("-");
     let title = str, author = "";
@@ -1978,7 +1978,7 @@ function asEntry(item) {
   // объект — аккуратно добиваем поля
   const o = { ...item };
   if (!o.title && o["название"]) o.title = String(o["название"]);
-  if (!o.author && o["автор"]) o.author = String(o["автор"]);
+  if (!o.author && o["автор"])   o.author = String(o["автор"]);
   if (!o.category && (o["категория"] || o.genre)) o.category = o["категория"] || o.genre;
 
   // нормализуем текст категории к нашим id
@@ -1986,20 +1986,15 @@ function asEntry(item) {
     const mapped = mapToCatId(o.category);
     if (mapped) o.category = mapped;
   }
+
   return o;
 }
-  // объект
-  const o = { ...item };
-  // если ключи по-русски
-  if (!o.title && o["название"]) o.title = o["название"];
-  if (!o.author && o["автор"]) o.author = o["автор"];
-  if (!o.category && (o["категория"] || o.genre)) o.category = o["категория"] || o.genre;
-  if (o.category && typeof o.category === "string"){
-    // нормализуем текстовую категорию в один из наших id
-    const mapped = mapToCatId(o.category);
-    if (mapped) o.category = mapped;
-  }
-  return o;
+
+function entryCategory(e){
+  // e.category может быть строкой id; если пусто — пытаемся угадать из title/author
+  if (e.category) return e.category;
+  const hint = mapToCatId(e.title) || mapToCatId(e.author);
+  return hint || null;
 }
 
 function entryCategory(e){
