@@ -2,274 +2,74 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Что почитать?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet"/>
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Helvetica Neue', sans-serif;
-      background: url('848A503B-8110-4E0A-992C-1CBFA22380C6.jpeg') no-repeat center center fixed;
-      background-size: cover;
-      color: #fff;
-      text-align: center;
+    body{
+      margin:0; padding:0; text-align:center; color:#fff;
+      font-family:'Helvetica Neue', Arial, sans-serif;
+      background:url('848A503B-8110-4E0A-992C-1CBFA22380C6.jpeg') no-repeat center center fixed;
+      background-size:cover;
     }
-    h1 {
-      margin-top: 80px;
-      font-size: 36px;
-      background-color: rgba(0, 0, 0, 0.6);
-      display: inline-block;
-      padding: 10px 20px;
-      border-radius: 8px;
+    .container{max-width:900px;margin:0 auto;padding:40px 16px;}
+    h1{
+      margin-top:80px; font-size:36px;
+      display:inline-block; padding:10px 20px; border-radius:8px;
+      background:rgba(0,0,0,.6);
     }
-    #result {
-      transition: all 0.3s ease;
-      font-size: 26px;
-      font-weight: 500;
-      background: rgba(220, 232, 242, 0.85);
-      color: #1f1f1f;
-      padding: 50px;
-      max-width: 90%;
-      margin-top: 30px;
-      margin-bottom: 40px;
-      box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
-      display: none;
-      border-radius: 14px;
-      text-align: center;
-      margin-left: auto;
-      margin-right: auto;
-      opacity: 0;
-      transform: translateY(20px);
-      animation: fadeInUp 0.8s ease forwards;
+    p.lead{
+      font-size:18px; max-width:700px; margin:20px auto;
+      background:rgba(255,255,255,.5); color:#000;
+      padding:15px; border-radius:10px;
     }
-    @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
-
-    .buttons { margin-top: 20px; }
-    button {
-      appearance: none; -webkit-appearance: none;
-      background-color: #333; color: #fff;
-      border: none; border-radius: 6px;
-      padding: 12px 24px; margin: 10px;
-      font-size: 16px; cursor: pointer;
+    .buttons{margin-top:20px}
+    button{
+      background:#333; color:#fff; border:0; border-radius:6px;
+      padding:12px 24px; margin:10px; font-size:16px; cursor:pointer;
     }
-    .subtitle {
-      margin-top: 40px; font-size: 54px;
-      color: #000000; font-family: 'Patrick Hand', cursive;
-      font-style: italic;
+    button:hover{background:#444}
+    #result{
+      transition:all .3s ease; font-size:22px; font-weight:500;
+      background:rgba(220,232,242,.85); color:#1f1f1f;
+      padding:32px; max-width:90%; margin:30px auto 40px;
+      box-shadow:0 0 12px rgba(0,0,0,.3);
+      border-radius:14px; display:none; text-align:center;
     }
-
-    @media screen and (max-width: 600px) {
-      h1 { font-size: 28px; margin-top: 40px; }
-      #result { font-size: 22px; padding: 24px; margin-top: 60px; max-width: 100%; }
-      button { width: 90%; font-size: 16px; padding: 12px; }
-      .subtitle { font-size: 28px; padding-bottom: 20px; }
+    @media (max-width:600px){
+      h1{font-size:28px; margin-top:40px}
+      #result{font-size:20px; padding:24px}
+      button{width:90%}
     }
   </style>
-  <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet"/>
 </head>
 <body>
-  <h1>Что почитать?</h1>
-  <p style="font-size: 18px; max-width: 600px; margin: 20px auto; background: rgba(255,255,255,0.5); padding: 15px; border-radius: 10px; color: #000;">
-    Нажмите на одну из кнопок ниже — и вы получите случайную книгу из выбранной категории.
-    Это может быть классика, триллер или что-то неожиданное. Просто доверьтесь рандому.
-  </p>
+  <div class="container">
+    <h1>Что почитать?</h1>
+    <p class="lead">
+      Нажмите на одну из кнопок ниже — и вы получите случайную книгу из выбранной категории.
+      Это может быть классика, триллер или что-то неожиданное. Просто доверьтесь рандому.
+    </p>
 
-  <div class="buttons">
-    <button onclick="showRandomBook(books)">Хочу что-то серьёзное</button>
-    <button onclick="showRandomBook(ya_books)">Хочу Young Adult</button>
-    <button onclick="showRandomBook(detective_books)">Хочу детектив</button>
-    <button onclick="showRandomBook(thriller_books)">Хочу ужасов и триллеров</button>
+    <!-- Кнопки категорий -->
+    <div class="buttons">
+      <button onclick="recommend('serious')">Хочу что-то серьёзное</button>
+      <button onclick="recommend('ya')">Хочу Young Adult</button>
+      <button onclick="recommend('detective')">Хочу детектив</button>
+      <button onclick="recommend('thriller')">Хочу ужасов и триллеров</button>
+    </div>
+
+    <!-- Здесь появляется результат -->
+    <div id="result"></div>
+
+    <footer style="margin-top:60px; padding:20px; font-size:14px; color:#111;">
+      <a href="https://instagram.com/acidandglue" target="_blank"
+         style="color:#111; text-decoration:none; background:rgba(255,255,255,.7);
+                padding:8px 14px; border-radius:6px;">Instagram @acidandglue</a>
+    </footer>
   </div>
 
-  <div id="result"></div>
-
-  <div class="subtitle">l’appel du vide</div>
-
-  <footer style="margin-top: 100px; padding: 40px; font-size: 14px; text-align: center; color: #111111;">
-    <a href="https://instagram.com/acidandglue" target="_blank"
-       style="color:#111; background:transparent; padding:10px 20px; border-radius:6px; text-decoration:none;">
-      Instagram @acidandglue
-    </a>
-  </footer>
-
-  <!-- Твои списки, как раньше -->
-  <script src="book_list.js"></script>
-  <script src="ya_book_list.js"></script>
-  <script src="detective_books.js"></script>
-  <script src="thriller_books.js"></script>
-
-  <script>
-    // ====== Настройки под «капризный» Google Books ======
-    const GOOGLE_API_KEY = ""; // можно оставить пустым
-    const LANGS = ["ru","lv","en"]; // приоритет языков
-    const NEGATIVE = "-magazine -periodical -journal -gardening";
-
-    // Хелперы
-    const clean = s => (s||"").replace(/\\s+/g, " ").trim();
-    const norm  = s => clean(s).toLowerCase().replace(/ё/g, "е");
-    const $ = id => document.getElementById(id);
-
-    // Опционально: для неоднозначных книг можно задать точный ID/ISBN тут
-    // Пример: 'Оно|Стивен Кинг' -> volumeId Google Books
-    const KNOWN = {
-      "оно|стивен кинг": { gbooksId: "m2oFEAAAQBAJ" } // It / Оно
-      // добавляй по желанию: "название|автор": { isbn: "978..." } или { gbooksId: "..." }
-    };
-
-    function showRandomBook(list) {
-      const result = $("result");
-      result.innerHTML = "";
-      result.style.display = "block";
-
-      const random = list[Math.floor(Math.random() * list.length)];
-      // random может быть строкой ИЛИ объектом {title, author, isbn, gbooksId}
-      const entry = typeof random === "string" ? { title: random } : random;
-      fetchBookInfo(entry);
-    }
-
-    async function fetchBookInfo(entry) {
-      const result = $("result");
-      const titleText = entry.title || "Без названия";
-      const authorText = entry.author || "";
-
-      result.innerHTML = "<strong>" + escapeHtml(titleText) + "</strong><br><br>Ищу описание...";
-
-      try {
-        // 1) Жёстко по заранее известному соответствию (KNOWN)
-        const key = norm(titleText) + "|" + norm(authorText);
-        if (KNOWN[key]) {
-          const vol = await fetchByIdOrIsbn(KNOWN[key]);
-          return render(vol, entry);
-        }
-
-        // 2) Если в самом элементе есть gbooksId/isbn — используем
-        if (entry.gbooksId || entry.isbn) {
-          const vol = await fetchByIdOrIsbn(entry);
-          return render(vol, entry);
-        }
-
-        // 3) Строгий поиск по заголовку + автору (если задан)
-        const found = await searchGoogleBooks({ title: titleText, author: authorText });
-        if (found) return render(found, entry);
-
-        result.innerHTML = "<strong>" + escapeHtml(titleText) + "</strong><br><br><em>Информация о книге не найдена в Google Books.</em>";
-      } catch (err) {
-        console.error(err);
-        result.innerHTML = "<strong>" + escapeHtml(titleText) + "</strong><br><br><em>Ошибка при загрузке информации.</em>";
-      }
-    }
-
-    function render(book, entry) {
-      const result = $("result");
-      const title = book.title || entry.title || "Без названия";
-      const authors = (book.authors && book.authors.length) ? book.authors.join(", ") : (entry.author || "Автор неизвестен");
-      const description = book.description ? (book.description.length > 600 ? book.description.slice(0, 600) + "..." : book.description)
-                                           : "Описание не найдено.";
-      const cover = book.image || "";
-      const link = book.infoLink || "#";
-
-      result.innerHTML = `
-        <h2>«${escapeHtml(title)}» — ${escapeHtml(authors)}</h2>
-        <p style="font-size:18px; font-weight: normal;">${escapeHtml(description)}</p>
-        ${cover ? `<img src="${cover}" alt="Обложка">` : ""}
-        <p><a href="${link}" target="_blank" style="color: #0033cc; font-weight: bold;">Подробнее</a></p>
-      `;
-    }
-
-    // ====== Google Books ======
-    async function fetchByIdOrIsbn({ gbooksId, isbn }) {
-      if (gbooksId) {
-        const u = new URL(`https://www.googleapis.com/books/v1/volumes/${encodeURIComponent(gbooksId)}`);
-        if (GOOGLE_API_KEY) u.searchParams.set("key", GOOGLE_API_KEY);
-        const r = await fetch(u);
-        if (!r.ok) throw new Error("GB volume fetch failed");
-        const data = await r.json();
-        return wrapVolume(data);
-      }
-      if (isbn) {
-        const found = await searchGoogleBooks({ isbn });
-        if (!found) throw new Error("ISBN not found");
-        return found;
-      }
-      throw new Error("No gbooksId or isbn");
-    }
-
-    async function searchGoogleBooks({ title, author, isbn }) {
-      const base = new URL("https://www.googleapis.com/books/v1/volumes");
-      if (isbn) {
-        base.searchParams.set("q", `isbn:${isbn}`);
-      } else {
-        const parts = [];
-        if (title) parts.push(`intitle:"${title.replace(/"/g, "")}"`);
-        if (author) parts.push(`inauthor:"${author.replace(/"/g, "")}"`);
-        parts.push(NEGATIVE);
-        base.searchParams.set("q", parts.join(" "));
-      }
-      base.searchParams.set("printType", "books");
-      base.searchParams.set("maxResults", "10");
-      base.searchParams.set("orderBy", "relevance");
-      base.searchParams.set("projection", "lite");
-      if (GOOGLE_API_KEY) base.searchParams.set("key", GOOGLE_API_KEY);
-
-      // Сначала пробуем предпочитаемые языки по очереди
-      for (const lang of LANGS) {
-        const url = new URL(base);
-        url.searchParams.set("langRestrict", lang);
-        const good = await tryFetchAndPick(url, { title, author });
-        if (good) return good;
-      }
-      // Потом без ограничения по языку
-      return await tryFetchAndPick(base, { title, author });
-    }
-
-    async function tryFetchAndPick(url, { title, author }) {
-      const r = await fetch(url);
-      if (!r.ok) return null;
-      const data = await r.json();
-      const items = (data.items || []).map(wrapVolume).filter(filterLikelyMatch({ title, author }));
-      return items[0] || null;
-    }
-
-    function wrapVolume(item) {
-      const v = item.volumeInfo || {};
-      return {
-        id: item.id,
-        title: clean(v.title),
-        authors: (v.authors || []).map(clean),
-        lang: v.language || "",
-        categories: v.categories || [],
-        pageCount: v.pageCount || 0,
-        printType: v.printType || "",
-        description: clean(v.description || ""),
-        image: (v.imageLinks && (v.imageLinks.thumbnail || v.imageLinks.smallThumbnail)) || "",
-        infoLink: v.infoLink || item.selfLink || ""
-      };
-    }
-
-    function filterLikelyMatch({ title, author }) {
-      const nt = norm(title || "");
-      const na = norm(author || "");
-      return x => {
-        // Только книги
-        if (x.printType && x.printType.toLowerCase() !== "book") return false;
-        // Отфильтровать явную периодику/садоводство
-        const cats = (x.categories || []).join(" ").toLowerCase();
-        if (/garden|сад|огород|periodical|magazine|журнал/.test(cats)) return false;
-        // Минимальная осмысленность
-        if (x.pageCount && x.pageCount < 80) return false;
-        // Совпадение по заголовку
-        const tOk = nt ? norm(x.title).includes(nt) : true;
-        // Совпадение по автору (если он известен)
-        const aOk = na ? (x.authors || []).some(a => norm(a).includes(na) || na.includes(norm(a))) : true;
-        return tOk && aOk;
-      };
-    }
-
-    // Безопасный вывод текста
-    function escapeHtml(s) {
-      return String(s)
-        .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;").replaceAll("'","&#039;");
-    }
-  </script>
+  <!-- Единственный скрипт со списками и логикой -->
+  <script src="books_with_api.js"></script>
 </body>
 </html>
