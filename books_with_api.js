@@ -1866,275 +1866,69 @@ const books = {
 };
 window.books = books;
 
-/*******************************
- * books_with_api.js  (ONE ARRAY)
- * Работает с ОДНИМ глобальным массивом книг.
- * Имя переменной не важно — код сам найдёт его.
- *******************************/
+/* ====== РУЧНОЙ РЕЖИМ: без Google Books ====== */
 
-/* ===== ЛОГИКА ДЛЯ ОБЪЕКТА books С КАТЕГОРИЯМИ ===== */
-
-// Настройки
-const GOOGLE_API_KEY = "";                        // можно оставить пустым
-const LANGS = ["ru", "lv", "en"];                 // приоритет языков
-const NEGATIVE = "-magazine -periodical -journal -gardening";
-
-// Фиксы для «капризных» книг: "название|автор" -> { gbooksId } или { isbn }
-const KNOWN = {
-  "оно|стивен кинг": { gbooksId: "m2oFEAAAQBAJ" } // It / «Оно» — точный том
-};
+// делаем твой объект доступным глобально (если ещё не сделали)
+window.books = window.books || books;
 
 // Утилиты
-const clean = s => (s || "").replace(/\s+/g, " ").trim();
-const norm  = s => clean(s).toLowerCase().replace(/ё/g, "е");
-const $     = id => document.getElementById(id);
-const pick  = arr => arr[Math.floor(Math.random() * arr.length)];
-function escapeHtml(s) {
+const $ = id => document.getElementById(id);
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+function escapeHtml(s){
   return String(s)
     .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
     .replaceAll('"',"&quot;").replaceAll("'","&#039;");
 }
 
-// Приводим строку "Название — Автор" к объекту {title, author}
-function asEntry(item) {
+// Нормализуем элемент: строка "Название — Автор" -> { title, author }
+function asEntry(item){
   if (typeof item !== "string") return item;
   let str = item.trim();
-  // ищем ПОСЛЕДНЕЕ тире: — или -
-  let i = str.lastIndexOf("—");
-  if (i === -1) i = str.lastIndexOf("-");
+  let i = str.lastIndexOf("—");          // длинное тире
+  if (i === -1) i = str.lastIndexOf("-"); // обычный дефис
   let title = str, author = "";
-  if (i > 0) {
+  if (i > 0){
     title = str.slice(0, i).trim();
     author = str.slice(i + 1).trim();
   }
   return { title, author };
 }
 
-// Рендер
-function showLoading(entry) {
-  const result = $("result");
-  if (!result) return;
-  result.style.display = "block";
-  result.innerHTML = `
-    <h2>«${escapeHtml(entry.title)}»${entry.author ? " — " + escapeHtml(entry.author) : ""}</h2>
-    <p><em>Ищу описание…</em></p>
-  `;
-}
-
-function renderResult(book, entry) {
+// Отрисовка карточки ИСКЛЮЧИТЕЛЬНО по твоим полям
+function renderManual(entry){
   const result = $("result");
   if (!result) return;
 
-  if (!book) {
-    result.style.display = "block";
-    result.innerHTML = `
-      <h2>«${escapeHtml(entry.title)}»${entry.author ? " — " + escapeHtml(entry.author) : ""}</h2>
-      <p><em>Информация не найдена.</em></p>
-    `;
-    return;
-  }
-
-  const title = book.title || entry.title || "Без названия";
-  const authors = (book.authors && book.authors.length) ? book.authors.join(", ") : (entry.author || "Автор неизвестен");
-  const description = book.description
-    ? (book.description.length > 1200 ? book.description.slice(0,1200) + "…" : book.description)
-    : "Описание недоступно.";
-  const cover = book.image || entry.cover || "";
-  const link  = book.infoLink || "";
+  const title = entry.title || "Без названия";
+  const author = entry.author || "Автор неизвестен";
+  const description = entry.description || "Описание пока не добавлено.";
+  const cover = entry.cover || "";             // URL твоей картинки (не обязательно)
+  const link = entry.infoLink || "";           // Ссылка «Подробнее» (не обязательно)
 
   result.style.display = "block";
   result.innerHTML = `
-    <h2>«${escapeHtml(title)}» — ${escapeHtml(authors)}</h2>
+    <h2>«${escapeHtml(title)}» — ${escapeHtml(author)}</h2>
     <p style="font-size:18px;">${escapeHtml(description)}</p>
     ${cover ? `<img id="book-cover" src="${cover}" alt="Обложка книги">` : ""}
     ${link ? `<p><a href="${link}" target="_blank" style="color:#0033cc;font-weight:bold;">Подробнее</a></p>` : ""}
   `;
 }
 
-// Google Books helpers
-function wrapVolume(item) {
-  const v = item.volumeInfo || {};
-  return {
-    id: item.id,
-    title: clean(v.title),
-    authors: (v.authors || []).map(clean),
-    lang: v.language || "",
-    categories: v.categories || [],
-    pageCount: v.pageCount || 0,
-    printType: v.printType || "",
-    description: clean(v.description || ""),
-    image: (v.imageLinks && (v.imageLinks.thumbnail || v.imageLinks.smallThumbnail)) || "",
-    infoLink: v.infoLink || item.selfLink || ""
-  };
-}
-
-function filterLikelyMatch({ title, author }) {
-  const nt = norm(title || "");
-  const na = norm(author || "");
-  return x => {
-    if (x.printType && x.printType.toLowerCase() !== "book") return false;
-    const cats = (x.categories || []).join(" ").toLowerCase();
-    if (/garden|сад|огород|periodical|magazine|журнал/.test(cats)) return false;
-    if (x.pageCount && x.pageCount < 80) return false;
-    const tOk = nt ? norm(x.title).includes(nt) : true;
-    const aOk = na ? (x.authors || []).some(a => norm(a).includes(na) || na.includes(norm(a))) : true;
-    return tOk && aOk;
-  };
-}
-
-async function fetchFullById(id) {
-  const u = new URL(`https://www.googleapis.com/books/v1/volumes/${encodeURIComponent(id)}`);
-  if (GOOGLE_API_KEY) u.searchParams.set("key", GOOGLE_API_KEY);
-  const r = await fetch(u);
-  if (!r.ok) return null;
-  return wrapVolume(await r.json());
-}
-
-async function tryFetchAndPick(url, { title, author }) {
-  const r = await fetch(url);
-  if (!r.ok) return null;
-  const data = await r.json();
-  const all = (data.items || []).map(wrapVolume).filter(filterLikelyMatch({ title, author }));
-  if (!all.length) return null;
-
-  // 1) сперва те, у кого ЕСТЬ описание
-  const withDesc = all.filter(x => x.description && x.description.length > 30);
-  if (withDesc.length) {
-    // среди них предпочитаем те, у кого есть обложка и норм. объём
-    withDesc.sort((a,b) => (+(!!b.image) - +(!!a.image)) || (b.pageCount - a.pageCount));
-    return withDesc[0];
-  }
-
-  // 2) затем те, у кого есть обложка
-  const withImg = all.filter(x => x.image);
-  if (withImg.length) {
-    withImg.sort((a,b) => (b.pageCount - a.pageCount));
-    return withImg[0];
-  }
-
-  // 3) иначе — просто самый «толстый»
-  all.sort((a,b) => (b.pageCount - a.pageCount));
-  return all[0];
-}
-
-async function searchGoogleBooks({ title, author, isbn }) {
-  const base = new URL("https://www.googleapis.com/books/v1/volumes");
-
-  if (isbn) {
-    base.searchParams.set("q", `isbn:${isbn}`);
-  } else {
-    const parts = [];
-    if (title)  parts.push(`intitle:"${title.replace(/"/g, "")}"`);
-    if (author) parts.push(`inauthor:"${author.replace(/"/g, "")}"`);
-    parts.push(NEGATIVE);
-    base.searchParams.set("q", parts.join(" "));
-  }
-
-  base.searchParams.set("printType", "books");
-  base.searchParams.set("maxResults", "10");
-  base.searchParams.set("orderBy", "relevance");
-  if (GOOGLE_API_KEY) base.searchParams.set("key", GOOGLE_API_KEY);
-
-  // 1) Предпочтительные языки
-  for (const lang of LANGS) {
-    const u = new URL(base);
-    u.searchParams.set("langRestrict", lang);
-    const picked = await tryFetchAndPick(u, { title, author });
-    if (picked) {
-      if (!picked.description && picked.id) {
-        const full = await fetchFullById(picked.id);
-        if (full && full.description) return full;
-      }
-      return picked;
-    }
-  }
-
-  // 2) Без ограничения языка
-  const picked = await tryFetchAndPick(base, { title, author });
-  if (picked && !picked.description && picked.id) {
-    const full = await fetchFullById(picked.id);
-    return full || picked;
-  }
-  return picked || null;
-}
-
-async function fetchByIdOrIsbn({ gbooksId, isbn }) {
-  if (gbooksId) {
-    const u = new URL(`https://www.googleapis.com/books/v1/volumes/${encodeURIComponent(gbooksId)}`);
-    if (GOOGLE_API_KEY) u.searchParams.set("key", GOOGLE_API_KEY);
-    const r = await fetch(u);
-    if (!r.ok) throw new Error("GB volume fetch failed");
-    const data = await r.json();
-    return wrapVolume(data);
-  }
-  if (isbn) {
-    const found = await searchGoogleBooks({ isbn });
-    if (!found) throw new Error("ISBN not found");
-    return found;
-  }
-  throw new Error("No gbooksId or isbn");
-}
-
-// Приоритет ручных полей (если добавишь description/cover у себя в books)
-function decorateWithManuals(vol, entry) {
-  const out = vol ? { ...vol } : {
-    title: entry.title,
-    authors: entry.author ? [entry.author] : [],
-    description: "",
-    image: "",
-    infoLink: "#",
-    printType: "book"
-  };
-  if (entry.description) out.description = entry.description;
-  if (entry.cover)       out.image = entry.cover;
-  return out;
-}
-
-// ГЛАВНАЯ: вызывается кнопками в HTML
-async function recommend(category) {
+// Главная функция для кнопок
+function recommend(category){
   const result = $("result");
   const list = (window.books && Array.isArray(window.books[category])) ? window.books[category] : [];
-  if (!list.length) {
-    if (result) {
+  if (!list.length){
+    if (result){
       result.style.display = "block";
       result.innerHTML = "<em>Список пуст для этой категории.</em>";
     }
     return;
   }
 
-  const raw = pick(list);
-  const entry = asEntry(raw);
-  showLoading(entry);
-
-  try {
-    // 1) Жёсткое соответствие, если задано в KNOWN
-    const key = norm(entry.title) + "|" + norm(entry.author || "");
-    if (KNOWN[key]) {
-      const vol = await fetchByIdOrIsbn(KNOWN[key]);
-      return renderResult(decorateWithManuals(vol, entry), entry);
-    }
-
-    // 2) Если в самой записи есть gbooksId/isbn
-    if (entry.gbooksId || entry.isbn) {
-      const vol = await fetchByIdOrIsbn(entry);
-      return renderResult(decorateWithManuals(vol, entry), entry);
-    }
-
-    // 3) Строгий поиск по title+author с фильтрами и догрузкой описания
-    const found = await searchGoogleBooks({ title: entry.title, author: entry.author || "" });
-    return renderResult(decorateWithManuals(found, entry), entry);
-
-  } catch (err) {
-    console.error(err);
-    if (result) {
-      result.style.display = "block";
-      result.innerHTML = `
-        <h2>«${escapeHtml(entry.title)}»${entry.author ? " — " + escapeHtml(entry.author) : ""}</h2>
-        <p><em>Ошибка при загрузке информации из Google Books.</em></p>
-      `;
-    }
-  }
+  const entry = asEntry(pick(list));
+  renderManual(entry);
 }
 
-// экспорт для onclick
+// экспорт
 window.recommend = recommend;
