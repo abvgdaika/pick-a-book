@@ -1945,25 +1945,49 @@ function mapToCatId(val){
 }
 
 /* ========= Нормализация элемента и категория ========= */
-function asEntry(item){
-  if (typeof item === "string"){
-    // пробуем распарсить "Название — Автор [категория?]"
-    // форматы: "Название — Автор", "Название - Автор", "[thriller] Название — Автор"
-    const str = item.trim();
+// Нормализация элемента в объект {title, author, category, ...} БЕЗ регулярных выражений
+function asEntry(item) {
+  if (typeof item === "string") {
+    let str = item.trim();
 
-    // категория в квадратных скобках
+    // 1) категория в [квадратных скобках] в начале строки
     let cat = null;
-    const mCat = str.match(/^\\s*\\[([^\\]]+)\\]\\s*(.*)$/);
-    const body = mCat ? mCat[2] : str;
-    if (mCat) cat = mapToCatId(mCat[1]);
+    if (str.startsWith("[")) {
+      const end = str.indexOf("]");
+      if (end > 1) {
+        const tag = str.slice(1, end).trim();
+        const mapped = mapToCatId(tag);
+        if (mapped) cat = mapped;
+        str = str.slice(end + 1).trim();
+      }
+    }
 
-    // название — автор
-    const m = body.match(/^(.*?)\\s*[—-]\\s*(.+)$/);
-    const title = m ? m[1].trim() : body;
-    const author = m ? m[2].trim() : "";
+    // 2) разделитель между названием и автором: ищем длинное тире — , иначе дефис -
+    // берём ПОСЛЕДНЕЕ вхождение, чтобы не ломаться на названиях с дефисами
+    let idx = str.lastIndexOf("—");
+    if (idx === -1) idx = str.lastIndexOf("-");
+    let title = str, author = "";
+    if (idx > 0) {
+      title = str.slice(0, idx).trim();
+      author = str.slice(idx + 1).trim();
+    }
 
     return { title, author, category: cat };
   }
+
+  // объект — аккуратно добиваем поля
+  const o = { ...item };
+  if (!o.title && o["название"]) o.title = String(o["название"]);
+  if (!o.author && o["автор"]) o.author = String(o["автор"]);
+  if (!o.category && (o["категория"] || o.genre)) o.category = o["категория"] || o.genre;
+
+  // нормализуем текст категории к нашим id
+  if (typeof o.category === "string") {
+    const mapped = mapToCatId(o.category);
+    if (mapped) o.category = mapped;
+  }
+  return o;
+}
   // объект
   const o = { ...item };
   // если ключи по-русски
