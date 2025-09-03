@@ -1866,44 +1866,63 @@ const books = {
 };
 window.books = books;
 
-/* ====== РУЧНОЙ РЕЖИМ: без Google Books ====== */
+/* ====== ГИБРИДНЫЙ РЕЖИМ: твои поля в приоритете + авто-описания из API + кэш ====== */
 
-// делаем твой объект доступным глобально (если ещё не сделали)
+// делаем объект books видимым глобально (если ещё не сделали)
 window.books = window.books || books;
 
-// Утилиты
+// ---------- настройки и утилиты ----------
+const GOOGLE_API_KEY = "";                       // можно пустым
+const LANGS = ["ru","lv","en"];
+const NEGATIVE = "-magazine -periodical -journal -gardening";
+const CACHE_KEY = "book_desc_cache_v1";
+
 const $ = id => document.getElementById(id);
-const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const clean = s => (s||"").replace(/\s+/g," ").trim();
+const norm  = s => clean(s).toLowerCase().replace(/ё/g,"е");
 function escapeHtml(s){
   return String(s)
     .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
     .replaceAll('"',"&quot;").replaceAll("'","&#039;");
 }
-
-// Нормализуем элемент: строка "Название — Автор" -> { title, author }
 function asEntry(item){
   if (typeof item !== "string") return item;
   let str = item.trim();
-  let i = str.lastIndexOf("—");          // длинное тире
-  if (i === -1) i = str.lastIndexOf("-"); // обычный дефис
+  let i = str.lastIndexOf("—"); if (i === -1) i = str.lastIndexOf("-");
   let title = str, author = "";
-  if (i > 0){
-    title = str.slice(0, i).trim();
-    author = str.slice(i + 1).trim();
-  }
+  if (i > 0){ title = str.slice(0,i).trim(); author = str.slice(i+1).trim(); }
   return { title, author };
 }
 
-// Отрисовка карточки ИСКЛЮЧИТЕЛЬНО по твоим полям
-function renderManual(entry){
+// ---------- кэш (localStorage) ----------
+function cacheGet(key){
+  try {
+    const all = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
+    return all[key] || null;
+  } catch { return null; }
+}
+function cacheSet(key, value){
+  try {
+    const all = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
+    all[key] = { ...value, ts: Date.now() };
+    localStorage.setItem(CACHE_KEY, JSON.stringify(all));
+  } catch {}
+}
+function cacheKeyFor(entry){
+  return norm(entry.title)+"|"+norm(entry.author||"");
+}
+
+// ---------- рендер ----------
+function render(entry){
   const result = $("result");
   if (!result) return;
 
   const title = entry.title || "Без названия";
   const author = entry.author || "Автор неизвестен";
   const description = entry.description || "Описание пока не добавлено.";
-  const cover = entry.cover || "";             // URL твоей картинки (не обязательно)
-  const link = entry.infoLink || "";           // Ссылка «Подробнее» (не обязательно)
+  const cover = entry.cover || "";
+  const link  = entry.infoLink || "";
 
   result.style.display = "block";
   result.innerHTML = `
@@ -1914,21 +1933,173 @@ function renderManual(entry){
   `;
 }
 
-// Главная функция для кнопок
-function recommend(category){
+// ---------- источники данных ----------
+function wrapGB(item){
+  const v = item.volumeInfo || {};
+  return {
+    id: item.id,
+    title: clean(v.title),
+    authors: (v.authors||[]).map(clean),
+    lang: v.language || "",
+    categories: v.categories || [],
+    pageCount: v.pageCount || 0,
+    printType: v.printType || "",
+    description: clean(v.description || ""),
+    image: (v.imageLinks && (v.imageLinks.thumbnail || v.imageLinks.smallThumbnail)) || "",
+    infoLink: v.infoLink || item.selfLink || ""
+  };
+}
+function filterGB({title, author}){
+  const nt = norm(title||"");
+  const na = norm(author||"");
+  return x=>{
+    if (x.printType && x.printType.toLowerCase() !== "book") return false;
+    const cats = (x.categories||[]).join(" ").toLowerCase();
+    if (/garden|сад|огород|periodical|magazine|журнал/.test(cats)) return false;
+    if (x.pageCount && x.pageCount < 80) return false;
+    const tOk = nt ? norm(x.title).includes(nt) : true;
+    const aOk = na ? (x.authors||[]).some(a=>norm(a).includes(na) || na.includes(norm(a))) : true;
+    return tOk && aOk;
+  };
+}
+async function gbFullById(id){
+  const u = new URL(`https://www.googleapis.com/books/v1/volumes/${encodeURIComponent(id)}`);
+  if (GOOGLE_API_KEY) u.searchParams.set("key", GOOGLE_API_KEY);
+  const r = await fetch(u); if (!r.ok) return null;
+  return wrapGB(await r.json());
+}
+async function gbTry(url, query){
+  const r = await fetch(url); if (!r.ok) return null;
+  const items = ((await r.json()).items||[]).map(wrapGB).filter(filterGB(query));
+  if (!items.length) return null;
+  // выбираем лучший: с описанием → с обложкой → самый объёмный
+  const withDesc = items.filter(x=>x.description && x.description.length>30);
+  if (withDesc.length){
+    withDesc.sort((a,b)=>(+(!!b.image)-+(!!a.image)) || (b.pageCount-a.pageCount));
+    return withDesc[0];
+  }
+  const withImg = items.filter(x=>x.image);
+  if (withImg.length){
+    withImg.sort((a,b)=>b.pageCount-a.pageCount);
+    return withImg[0];
+  }
+  items.sort((a,b)=>b.pageCount-a.pageCount);
+  return items[0];
+}
+async function fromGoogle(entry){
+  const base = new URL("https://www.googleapis.com/books/v1/volumes");
+  const parts = [];
+  if (entry.title)  parts.push(`intitle:"${entry.title.replace(/"/g,"")}"`);
+  if (entry.author) parts.push(`inauthor:"${entry.author.replace(/"/g,"")}"`);
+  parts.push(NEGATIVE);
+  base.searchParams.set("q", parts.join(" "));
+  base.searchParams.set("printType","books");
+  base.searchParams.set("maxResults","20");
+  base.searchParams.set("orderBy","relevance");
+  if (GOOGLE_API_KEY) base.searchParams.set("key", GOOGLE_API_KEY);
+
+  for (const lang of LANGS){
+    const u = new URL(base); u.searchParams.set("langRestrict", lang);
+    const picked = await gbTry(u, entry);
+    if (picked){
+      if (!picked.description && picked.id){
+        const full = await gbFullById(picked.id);
+        if (full && full.description) return full;
+      }
+      return picked;
+    }
+  }
+  return await gbTry(base, entry);
+}
+
+// Open Library (fallback)
+function fromOLWrapDoc(doc){
+  const title = clean(doc.title);
+  const authors = (doc.author_name||[]).map(clean);
+  const cover = doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg` : "";
+  const key = doc.key || doc.work_key || doc.edition_key?.[0];
+  const infoLink = key ? `https://openlibrary.org${key}` : "";
+  return { title, authors, image: cover, infoLink };
+}
+async function fromOpenLibrary(entry){
+  const q = new URL("https://openlibrary.org/search.json");
+  if (entry.title)  q.searchParams.set("title", entry.title);
+  if (entry.author) q.searchParams.set("author", entry.author);
+  q.searchParams.set("limit","5");
+  const r = await fetch(q); if (!r.ok) return null;
+  const data = await r.json();
+  const docs = data.docs || [];
+  if (!docs.length) return null;
+
+  // берём лучший по наличию обложки/году/количеству страниц
+  docs.sort((a,b)=>(+(!!b.cover_i)-+(!!a.cover_i)) || ((b.first_publish_year||0)-(a.first_publish_year||0)) || ((b.number_of_pages_median||0)-(a.number_of_pages_median||0)));
+  const d = docs[0];
+  const base = fromOLWrapDoc(d);
+
+  // описание из /works/{key}.json или edition
+  let description = "";
+  try {
+    const workKey = (d.key || (d.work_key && d.work_key[0]));
+    if (workKey){
+      const wr = await fetch(`https://openlibrary.org${workKey}.json`);
+      if (wr.ok){
+        const wj = await wr.json();
+        if (typeof wj.description === "string") description = wj.description;
+        else if (wj.description && wj.description.value) description = wj.description.value;
+      }
+    }
+  } catch {}
+  return { ...base, description: clean(description) };
+}
+
+// объединяем данные с приоритетом твоих полей
+function mergeEntry(entry, fetched){
+  const out = { ...entry };
+  if (!out.author && fetched?.authors?.length) out.author = fetched.authors.join(", ");
+  if (!out.description && fetched?.description) out.description = fetched.description;
+  if (!out.cover && fetched?.image) out.cover = fetched.image;
+  if (!out.infoLink && fetched?.infoLink) out.infoLink = fetched.infoLink;
+  return out;
+}
+
+// ---------- главная функция ----------
+async function recommend(category){
   const result = $("result");
   const list = (window.books && Array.isArray(window.books[category])) ? window.books[category] : [];
   if (!list.length){
-    if (result){
-      result.style.display = "block";
-      result.innerHTML = "<em>Список пуст для этой категории.</em>";
-    }
+    if (result){ result.style.display="block"; result.innerHTML = "<em>Список пуст для этой категории.</em>"; }
     return;
   }
 
-  const entry = asEntry(pick(list));
-  renderManual(entry);
+  let entry = asEntry(pick(list)); // {title, author, ...}
+
+  // 1) если у тебя уже есть description/cover — просто показываем
+  if (entry.description || entry.cover){ return render(entry); }
+
+  // 2) кэш
+  const key = cacheKeyFor(entry);
+  const cached = cacheGet(key);
+  if (cached){ return render({ ...entry, ...cached }); }
+
+  // 3) Google Books → Open Library
+  try {
+    const gb = await fromGoogle(entry);
+    if (gb){
+      const merged = mergeEntry(entry, gb);
+      cacheSet(key, { description: merged.description||"", cover: merged.cover||"", infoLink: merged.infoLink||"" });
+      return render(merged);
+    }
+    const ol = await fromOpenLibrary(entry);
+    if (ol){
+      const merged = mergeEntry(entry, ol);
+      cacheSet(key, { description: merged.description||"", cover: merged.cover||"", infoLink: merged.infoLink||"" });
+      return render(merged);
+    }
+  } catch (e) { console.error(e); }
+
+  // 4) если ничего не нашли — аккуратная заглушка
+  return render(entry);
 }
 
-// экспорт
+// экспорт для кнопок
 window.recommend = recommend;
