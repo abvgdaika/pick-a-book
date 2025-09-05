@@ -12,17 +12,42 @@
     --lead-fg: #fff;
   }
 
-  /* фон */
-  html, body { height:100%; }
-  body{
-    margin:0; color:#fff; text-align:center;
-    font-family:'Helvetica Neue', Arial, sans-serif;
-    background-image:url('848A503B-8110-4E0A-992C-1CBFA22380C6.jpeg');
-    background-position:center;
-    background-repeat:no-repeat;
-    background-size:cover;
-    background-attachment:fixed; /* десктоп */
-  }
+ /* базовый цвет на случай «протяжки» скроллом */
+html, body { min-height:100%; background:#0f1216; }
+
+/* убираем фон-изображение с body */
+body{
+  margin:0; color:#fff; text-align:center;
+  font-family:'Helvetica Neue', Arial, sans-serif;
+  /* НИКАКОГО background-image тут больше не задаём */
+}
+
+/* ФИКСИРОВАННЫЙ слой с картинкой — всегда во весь экран */
+body::before{
+  content:"";
+  position:fixed; inset:0;
+  background:url('848A503B-8110-4E0A-992C-1CBFA22380C6.jpeg') center top / cover no-repeat;
+  z-index:-2;
+  will-change:transform;
+}
+
+/* Слой-затемнение поверх картинки (для читабельного текста) */
+body::after{
+  content:"";
+  position:fixed; inset:0;
+  background:linear-gradient(
+    to bottom,
+    rgba(0,0,0,.35),
+    rgba(0,0,0,.28) 40%,
+    rgba(0,0,0,.35)
+  );
+  z-index:-1;
+}
+
+/* iOS Safari — пусть остаётся fixed, он тут не мешает */
+@supports (-webkit-touch-callout: none) {
+  body::before{ position:fixed; }
+}
   /* мягкое затемнение только на широких экранах */
 @media (min-width: 1024px){
   body::before{
