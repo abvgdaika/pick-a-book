@@ -12,35 +12,47 @@
     --lead-fg: #fff;
   }
 
-  html, body { margin:0; padding:0; height:100%; background:#0f1216; }
-  body{
-    color:#fff; text-align:center;
-    font-family:'Helvetica Neue', Arial, sans-serif;
-    position:relative;
-  }
+  /* тёмный базовый фон — на html */
+/* фоновая картинка теперь на html — рисуется сразу на старте */
+html{
+  background: #0f1216 url('848A503B-8110-4E0A-992C-1CBFA22380C6.jpeg') center / cover no-repeat;
+}
 
-  /* картинка на фоне */
-  body::before{
-    content:"";
-    position:fixed;
-    inset:0;
-    background:url('848A503B-8110-4E0A-992C-1CBFA22380C6.jpeg') center / cover no-repeat;
-    z-index:-2;
-  }
+/* где поддерживается fixed — пусть будет фикс для десктопа */
+@supports (background-attachment: fixed){
+  html{ background-attachment: fixed; }
+}
 
-  /* затемнение поверх картинки */
-  body::after{
-    content:"";
-    position:fixed;
-    inset:0;
-    background:linear-gradient(
-      to bottom,
-      rgba(0,0,0,.35),
-      rgba(0,0,0,.25) 40%,
-      rgba(0,0,0,.35)
-    );
-    z-index:-1;
-  }
+/* body прозрачный, чтобы было видно ::before */
+body{
+  margin:0; padding:0; height:100%;
+  color:#fff; text-align:center;
+  font-family:'Helvetica Neue', Arial, sans-serif;
+  position:relative;
+  background:transparent !important; /* ВАЖНО */
+}
+/* мягкое затемнение поверх фоновой картинки */
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:linear-gradient(
+    to bottom,
+    rgba(0,0,0,.30),
+    rgba(0,0,0,.24) 40%,
+    rgba(0,0,0,.30)
+  );
+  z-index:-1;              /* под контентом, над html */
+  pointer-events:none;
+}
+
+/* стабилизируем высоту слоя на iOS */
+@supports (height: 100svh){
+  body::after{ height:100svh; inset:auto 0 0 0; top:0; }
+}
+@supports (height: 100dvh){
+  body::after{ height:100dvh; inset:auto 0 0 0; top:0; }
+}
 
   .container{max-width:1000px;margin:0 auto;padding:40px 16px;}
 
