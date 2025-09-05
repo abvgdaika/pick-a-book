@@ -2120,13 +2120,6 @@ window.OVR_DATA = [{"title":"Мальтийский сокол","author":"Дэш
   var norm = s => (s||"").toString().trim().toLowerCase().replace(/ё/g,"е").replace(/\s+/g," ");
   var key  = (t,a) => norm(t) + "|" + norm(a||"");
 
-  // построим два индекса
-  DATA.forEach(x => {
-    ...
-  });
-  ...
-})();
-
 // построим два индекса
 DATA.forEach(x => {
   var t = norm(x.title), a = norm(x.author);
