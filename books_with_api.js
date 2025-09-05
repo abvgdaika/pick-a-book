@@ -2113,34 +2113,57 @@ window.OVR_DATA = [{"title":"Мальтийский сокол","author":"Дэш
 
   /* ======================= OVERRIDES + TURBO (self-contained) ======================= */
 (function(){
-  var DATA = Array.isArray(window.OVR_DATA) ? window.OVR_DATA : [];
-  var idxExact = Object.create(null);
-  var idxByTitle = Object.create(null);
-  var norm = s => (s||"").toString().trim().toLowerCase().replace(/ё/g,"е").replace(/\s+/g," ");
-  var key  = (t,a) => norm(t) + "|" + norm(a||"");
+  // === ИНДЕКС И УМНЫЙ MERGE (вместо старого idx/merge) ===
+var idxExact = Object.create(null);   // по (title|author)
+var idxByTitle = Object.create(null); // по title
+var norm = s => (s||"").toString().trim().toLowerCase().replace(/ё/g,"е").replace(/\s+/g," ");
+var key  = (t,a) => norm(t) + "|" + norm(a||"");
 
-  DATA.forEach(x => {
-    var t = norm(x.title), a = norm(x.author);
-    if (!t) return;
-    if (a) idxExact[key(x.title, x.author)] = x;
-    (idxByTitle[t] ||= []).push(x);
-  });
+// построим два индекса
+DATA.forEach(x => {
+  var t = norm(x.title), a = norm(x.author);
+  if (!t) return;
+  if (a) idxExact[key(x.title, x.author)] = x;
+  (idxByTitle[t] ||= []).push(x);
+});
 
-  function merge(entry){
-    entry = entry || {};
-    var t = norm(entry.title), a = norm(entry.author);
-    var hit = (a && idxExact[key(entry.title, entry.author)]) || null;
-    if (!hit) {
-      var list = idxByTitle[t] || [];
-      if (list.length) hit = list.find(x => x.description && x.description.length) || list.find(x => x.cover) || list[0];
+// более устойчивый merge:
+function merge(entry){
+  entry = entry || {};
+  var t = norm(entry.title), a = norm(entry.author);
+
+  // 1) точное (title|author)
+  var hit = (a && idxExact[key(entry.title, entry.author)]) || null;
+
+  // 2) по одному названию (если автор отличается/пустой)
+  if (!hit) {
+    var list = idxByTitle[t] || [];
+    if (list.length) {
+      // приоритет: есть description → есть cover → просто первый
+      hit = list.find(x => x.description && x.description.length) || list.find(x => x.cover) || list[0];
     }
-    if (!hit) return entry;
-    return Object.assign({}, entry, {
-      description: hit.description || entry.description,
-      cover: hit.cover || entry.cover,
-      infoLink: hit.infoLink || entry.infoLink
-    });
   }
+
+  // 3) приблизительный матч по подстроке (разные тире/кавычки/скобки)
+  if (!hit) {
+    var titles = Object.keys(idxByTitle);
+    var approxTitle = titles.find(tt => tt.includes(t) || t.includes(tt));
+    if (approxTitle) {
+      var list2 = idxByTitle[approxTitle];
+      hit = list2.find(x => x.description && x.description.length) || list2.find(x => x.cover) || list2[0];
+    }
+  }
+
+  if (!hit) return entry;
+  return Object.assign({}, entry, {
+    description: hit.description || entry.description,
+    cover: hit.cover || entry.cover,
+    infoLink: hit.infoLink || entry.infoLink
+  });
+}
+
+// (необязательно, но удобно дебажить ключи в консоли)
+window.__OVR_DEBUG__ = { idxExact, idxByTitle, norm, key };
 
   var pick = arr => arr[Math.floor(Math.random()*arr.length)];
   function toEntry(item){
