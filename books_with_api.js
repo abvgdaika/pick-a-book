@@ -2149,26 +2149,40 @@ window.OVR_DATA = [{"title":"Мальтийский сокол","author":"Дэш
       ? window.render
       : (typeof window.renderManual === "function" ? window.renderManual : null);
 
-  window.recommend = function recommendFast(category){
-    const list = (window.books && Array.isArray(window.books[category])) ? window.books[category] : [];
-    const resEl = document.getElementById("result");
-    if (!list.length){
-      if (resEl){ resEl.style.display="block"; resEl.innerHTML="<em>Список пуст для этой категории.</em>"; }
-      return;
-    }
-    let entry = toEntry(pick(list));
-    entry = merge(entry);
-    if (typeof renderFn === "function") {
-      renderFn(entry);
-    } else if (resEl) {
-      // запасной рендер, если render*/ нет
-      resEl.style.display="block";
-      resEl.innerHTML = `
-        <h2>«${(entry.title||"Без названия")}» — ${(entry.author||"Автор неизвестен")}</h2>
-        <p>${entry.description || "Описание недоступно."}</p>
-        ${entry.cover ? `<img id="book-cover" src="${entry.cover}" alt="Обложка книги">` : ""}
-        ${entry.infoLink ? `<p><a href="${entry.infoLink}" target="_blank" style="color:#0033cc;font-weight:bold;">Подробнее</a></p>` : ""}
-      `;
-    }
-  };
+window.recommend = function recommendFast(category){
+  const list = (window.books && Array.isArray(window.books[category])) ? window.books[category] : [];
+  const resEl = document.getElementById("result");
+  if (!resEl) return;
+  if (!list.length){
+    resEl.style.display="block";
+    resEl.innerHTML="<em>Список пуст для этой категории.</em>";
+    return;
+  }
+
+  // локально выбираем книгу и мержим с твоими данными
+  const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+  function toEntry(item){
+    if (typeof item !== "string") return item || {};
+    let s=item.trim(), i=s.lastIndexOf("—"); if(i===-1) i=s.lastIndexOf("-");
+    let title=s, author=""; if(i>0){ title=s.slice(0,i).trim(); author=s.slice(i+1).trim(); }
+    return { title, author };
+  }
+  let entry = toEntry(pick(list));
+  entry = (typeof merge === "function") ? merge(entry||{}) : (entry||{});
+
+  // ПРЯМОЙ РЕНДЕР (не зовём твой render, чтобы он ничего не перетирал)
+  const title = entry.title || "Без названия";
+  const author = entry.author || "Автор неизвестен";
+  const desc = entry.description && entry.description.trim() ? entry.description : "Описание недоступно.";
+  const cover = entry.cover && entry.cover.trim() ? entry.cover : "";
+  const link  = entry.infoLink && entry.infoLink.trim() ? entry.infoLink : "";
+
+  resEl.style.display = "block";
+  resEl.innerHTML = `
+    <h2>«${title}» — ${author}</h2>
+    <p>${desc}</p>
+    ${cover ? `<img id="book-cover" src="${cover}" alt="Обложка книги">` : ""}
+    ${link ? `<p><a href="${link}" target="_blank" style="color:#0033cc;font-weight:bold;">Подробнее</a></p>` : ""}
+  `;
+};
 })();
