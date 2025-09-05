@@ -12,29 +12,36 @@
     --lead-fg: #fff;
   }
 
- /* базовый цвет на случай «протяжки» скроллом */
-html, body { min-height:100%; background:#0f1216; }
+/* базовый цвет, если iOS тянет «резинку» */
+html, body { background:#0f1216; }
 
-/* убираем фон-изображение с body */
-body{
-  margin:0; color:#fff; text-align:center;
-  font-family:'Helvetica Neue', Arial, sans-serif;
-  /* НИКАКОГО background-image тут больше не задаём */
-}
-
-/* ФИКСИРОВАННЫЙ слой с картинкой — всегда во весь экран */
+/* ФОН-КАРТИНКА: фиксированная высота вьюпорта */
 body::before{
   content:"";
-  position:fixed; inset:0;
-  background:url('848A503B-8110-4E0A-992C-1CBFA22380C6.jpeg') center top / cover no-repeat;
+  position:fixed;
+  left:0; top:0;
+  width:100vw;          /* ширина окна */
+  height:100svh;        /* стабильная высота на iOS при старте */
+  background:url('848A503B-8110-4E0A-992C-1CBFA22380C6.jpeg') center / cover no-repeat;
   z-index:-2;
-  will-change:transform;
+  pointer-events:none;
+  -webkit-transform:translateZ(0);  /* прогоняем через композитор */
+          transform:translateZ(0);
+  -webkit-backface-visibility:hidden;
 }
 
-/* Слой-затемнение поверх картинки (для читабельного текста) */
+/* если браузер умеет dvh — берём «динамическую» высоту без швов */
+@supports (height: 100dvh){
+  body::before{ height:100dvh; }
+}
+
+/* ЗАТЕМНЕНИЕ поверх фоновой картинки — той же высоты */
 body::after{
   content:"";
-  position:fixed; inset:0;
+  position:fixed;
+  left:0; top:0;
+  width:100vw;
+  height:100svh;
   background:linear-gradient(
     to bottom,
     rgba(0,0,0,.35),
@@ -42,6 +49,10 @@ body::after{
     rgba(0,0,0,.35)
   );
   z-index:-1;
+  pointer-events:none;
+}
+@supports (height: 100dvh){
+  body::after{ height:100dvh; }
 }
 
 /* iOS Safari — пусть остаётся fixed, он тут не мешает */
