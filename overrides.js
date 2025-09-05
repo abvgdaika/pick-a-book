@@ -51,4 +51,52 @@
     // подождём отрисовки, затем применим оверрайд
     setTimeout(applyDomOverride, 50);
   };
+   /* ==== TURBO MODE: синхронный recommend без сетевых запросов ==== */
+(function () {
+  if (!window.books) return;
+
+  // утилиты
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const norm = s => (s || "").toString().trim();
+  function toEntry(item) {
+    if (typeof item !== "string") return item || {};
+    let s = item.trim();
+    let i = s.lastIndexOf("—");
+    if (i === -1) i = s.lastIndexOf("-");
+    let title = s, author = "";
+    if (i > 0) {
+      title = s.slice(0, i).trim();
+      author = s.slice(i + 1).trim();
+    }
+    return { title, author };
+  }
+
+  // нужна функция отрисовки
+  const renderFn = typeof window.render === "function"
+    ? window.render
+    : (typeof window.renderManual === "function" ? window.renderManual : null);
+  if (!renderFn) return;
+
+  // наш быстрый recommend
+  function recommendFast(category) {
+    const list = (window.books && Array.isArray(window.books[category])) ? window.books[category] : [];
+    const resEl = document.getElementById("result");
+    if (!list.length) {
+      if (resEl) {
+        resEl.style.display = "block";
+        resEl.innerHTML = "<em>Список пуст для этой категории.</em>";
+      }
+      return;
+    }
+    // локально выбираем книгу
+    let entry = toEntry(pick(list));
+    // применяем твой override (merge из overrides.js уже есть)
+    try { entry = merge(entry || {}); } catch (_) {}
+    // мгновенная отрисовка
+    renderFn(entry);
+  }
+
+  // полностью заменяем глобальную recommend на нашу
+  window.recommend = recommendFast;
+})();
 })();
