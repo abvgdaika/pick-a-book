@@ -7,83 +7,39 @@
   <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet"/>
 <style>
   :root{
-    --card-bg: rgba(245,248,252,.92);
-    --lead-bg: rgba(18,20,23,.70);
+    --card-bg: rgba(18, 20, 23, .88);
+    --lead-bg: rgba(18,20,23,.75);
     --lead-fg: #fff;
   }
 
-/* базовый цвет, если iOS тянет «резинку» */
-html, body { background:#0f1216; }
+  html, body { margin:0; padding:0; height:100%; background:#0f1216; }
+  body{
+    color:#fff; text-align:center;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    position:relative;
+  }
 
-/* ФОН-КАРТИНКА: фиксированная высота вьюпорта */
-body::before{
-  content:"";
-  position:fixed;
-  left:0; top:0;
-  width:100vw;          /* ширина окна */
-  height:100svh;        /* стабильная высота на iOS при старте */
-  background:url('848A503B-8110-4E0A-992C-1CBFA22380C6.jpeg') center / cover no-repeat;
-  z-index:-2;
-  pointer-events:none;
-  -webkit-transform:translateZ(0);  /* прогоняем через композитор */
-          transform:translateZ(0);
-  -webkit-backface-visibility:hidden;
-}
-
-/* если браузер умеет dvh — берём «динамическую» высоту без швов */
-@supports (height: 100dvh){
-  body::before{ height:100dvh; }
-}
-
-/* ЗАТЕМНЕНИЕ поверх фоновой картинки — той же высоты */
-body::after{
-  content:"";
-  position:fixed;
-  left:0; top:0;
-  width:100vw;
-  height:100svh;
-  background:linear-gradient(
-    to bottom,
-    rgba(0,0,0,.35),
-    rgba(0,0,0,.28) 40%,
-    rgba(0,0,0,.35)
-  );
-  z-index:-1;
-  pointer-events:none;
-}
-@supports (height: 100dvh){
-  body::after{ height:100dvh; }
-}
-
-/* iOS Safari — пусть остаётся fixed, он тут не мешает */
-@supports (-webkit-touch-callout: none) {
-  body::before{ position:fixed; }
-}
-  /* мягкое затемнение только на широких экранах */
-@media (min-width: 1024px){
+  /* картинка на фоне */
   body::before{
     content:"";
-    position:fixed; inset:0;
+    position:fixed;
+    inset:0;
+    background:url('848A503B-8110-4E0A-992C-1CBFA22380C6.jpeg') center / cover no-repeat;
+    z-index:-2;
+  }
+
+  /* затемнение поверх картинки */
+  body::after{
+    content:"";
+    position:fixed;
+    inset:0;
     background:linear-gradient(
       to bottom,
       rgba(0,0,0,.35),
-      rgba(0,0,0,.28) 40%,
+      rgba(0,0,0,.25) 40%,
       rgba(0,0,0,.35)
     );
-    pointer-events:none;
     z-index:-1;
-  }
-}
-  /* iOS любит игнорить fixed: даём мобильный фолбэк */
-  @supports (-webkit-touch-callout: none) {
-    body{ background-attachment:scroll; } /* для iOS Safari */
-  }
-  @media (max-width: 860px){
-    body{
-      background-image:url('848A503B-8110-4E0A-992C-1CBFA22380C6.jpeg'); /* явный дубль для мобилы */
-      background-size:cover;
-      background-position:center top;
-    }
   }
 
   .container{max-width:1000px;margin:0 auto;padding:40px 16px;}
@@ -94,17 +50,14 @@ body::after{
     background:rgba(0,0,0,.55); backdrop-filter:blur(2px);
   }
 
-  /* читаемый лид на любом фоне */
-p.lead{
-  font-size:18px; line-height:1.55; max-width:820px; margin:18px auto 8px;
-  background:rgba(18,20,23,.78);   /* темнее */
-  color:#fff;
-  padding:16px 18px; border-radius:12px;
-  text-shadow:0 1px 0 rgba(0,0,0,.25);
-  backdrop-filter: blur(2px);
-}
+  p.lead{
+    font-size:18px; line-height:1.55; max-width:820px; margin:18px auto 8px;
+    background:var(--lead-bg); color:var(--lead-fg);
+    padding:16px 18px; border-radius:12px;
+    text-shadow:0 1px 0 rgba(0,0,0,.25);
+    backdrop-filter:blur(2px);
+  }
 
-  /* кнопки: два ряда, по центру */
   .buttons{
     margin-top:16px; display:flex; flex-wrap:wrap; gap:12px; justify-content:center;
   }
@@ -117,47 +70,29 @@ p.lead{
   .buttons button:hover{ background:#3a4048; transform:translateY(-1px); }
   .buttons button:active{ transform:translateY(0); }
 
-/* карточка — читаемая на любом фоне */
-#result.active{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  text-align:center;
+  /* результат скрыт до вызова */
+  #result{ display:none; }
+  #result.active{
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+    background:var(--card-bg); color:#f2f5f7;
+    backdrop-filter: blur(6px) saturate(120%);
+    border:1px solid rgba(255,255,255,.08);
+    box-shadow:0 10px 28px rgba(0,0,0,.35);
+    border-radius:16px;
+    padding:24px 18px;
+    margin:28px auto 40px;
+    max-width:1000px;
+  }
 
-  /* более тёмная подложка */
-  background:rgba(18, 20, 23, .88);
-  color:#f2f5f7;
-  backdrop-filter: blur(6px) saturate(120%);
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow:0 10px 28px rgba(0,0,0,.35);
+  #result h2{ font-size:28px; line-height:1.3; margin:0 0 10px; text-shadow:0 1px 0 rgba(0,0,0,.35); }
+  #result p{ font-size:17px; line-height:1.65; margin:0 0 12px; max-width:68ch; }
+  #result a{ color:#8db6ff; font-weight:600; text-decoration:none; }
+  #result a:hover{ text-decoration:underline; }
 
-  border-radius:16px;
-  padding:24px 18px;
-  margin:28px auto 40px;
-  max-width:1000px;
-}
-
-#result h2{
-  font-size:28px; line-height:1.3; margin:0 0 10px;
-  text-shadow:0 1px 0 rgba(0,0,0,.35);
-}
-
-#result p{
-  font-size:17px; line-height:1.65; margin:0 0 12px;
-  max-width:68ch;      /* удобная ширина строки */
-}
-
-#result a{ color:#8db6ff; font-weight:600; text-decoration:none; }
-#result a:hover{ text-decoration:underline; }
-
-/* обложка остаётся по центру и читаемая */
-#book-cover{
-  width:min(260px, 90%);
-  height:auto;
-  border-radius:12px;
-  box-shadow:0 10px 24px rgba(0,0,0,.35);
-  margin:10px 0 6px;
-}
+  #book-cover{
+    width:min(260px, 90%); height:auto; border-radius:12px;
+    box-shadow:0 10px 24px rgba(0,0,0,.35); margin:10px 0 6px;
+  }
 
   @media (max-width:480px){
     h1{font-size:28px; margin-top:32px}
