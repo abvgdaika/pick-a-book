@@ -2179,7 +2179,7 @@ window.__OVR_DEBUG__ = { idxExact, idxByTitle, norm, key };
     var resEl = document.getElementById("result");
     if (!resEl) return;
     if (!list.length){
-      resEl.style.display = "block";
+      resEl.classList.add("active");
       resEl.innerHTML = "<em>Список пуст для этой категории.</em>";
       return;
     }
@@ -2192,7 +2192,7 @@ window.__OVR_DEBUG__ = { idxExact, idxByTitle, norm, key };
     var cover = (entry.cover && entry.cover.trim()) ? entry.cover : "";
     var link  = (entry.infoLink && entry.infoLink.trim()) ? entry.infoLink : "";
 
-    resEl.style.display = "block";
+    resEl.classList.add("active");
     resEl.innerHTML = `
       <h2>«${title}» — ${author}</h2>
       <p>${desc}</p>
