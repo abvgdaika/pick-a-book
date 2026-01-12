@@ -82,7 +82,6 @@ window.BOOKS = [{"title": "Мальтийский сокол", "author": "Дэш
 
     result.innerHTML = `
   <div class="result-actions">
-  <button onclick="backToPicker()">Назад к выбору</button>
     <button onclick="recommend('${category}')">Ещё одну</button>
   </div>
 
@@ -101,25 +100,6 @@ window.BOOKS = [{"title": "Мальтийский сокол", "author": "Дэш
   const y = el.getBoundingClientRect().top + window.pageYOffset - 12;
   window.scrollTo({ top: y, behavior: "smooth" });
 };
-    window.backToPicker = function () {
-  const result = document.getElementById("result");
-  if (result) {
-    result.style.display = "none";
-    result.innerHTML = "";
-  }
-
-  // Скроллим наверх к кнопкам (и если скролл странный — всё равно уходим в top)
-  const el = document.getElementById("pick");
-  if (el) {
-    const y = el.getBoundingClientRect().top + window.pageYOffset - 12;
-    window.scrollTo(0, y);
-    setTimeout(() => window.scrollTo({ top: y, behavior: "smooth" }), 0);
-  } else {
-    window.scrollTo(0, 0);
-    setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
-  }
-};
-
     // GA4 событие (если подключено в index.html)
     try {
       if (window.gtag) {
