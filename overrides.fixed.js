@@ -95,10 +95,11 @@ window.BOOKS = [{"title": "Мальтийский сокол", "author": "Дэш
     </div>
   </div>
 `;
-    window.scrollToPicker = function () {
+   window.scrollToPicker = function () {
   const el = document.getElementById("pick");
   if (!el) return;
-  el.scrollIntoView({ behavior: "smooth", block: "start" });
+  const y = el.getBoundingClientRect().top + window.pageYOffset - 12;
+  window.scrollTo({ top: y, behavior: "smooth" });
 };
 
     // GA4 событие (если подключено в index.html)
