@@ -81,15 +81,25 @@ window.BOOKS = [{"title": "Мальтийский сокол", "author": "Дэш
       : "";
 
     result.innerHTML = `
-      <div class="book">
-        <div class="cover">${coverHtml}</div>
-        <div class="meta">
-          <h2>${title}</h2>
-          <div class="author">${author}</div>
-          ${desc ? `<p class="desc">${desc}</p>` : ""}
-        </div>
-      </div>
-    `;
+  <div class="book">
+    <div class="cover">${coverHtml}</div>
+    <div class="meta">
+      <h2>${title}</h2>
+      <div class="author">${author}</div>
+      ${desc ? `<p class="desc">${desc}</p>` : ""}
+    </div>
+  </div>
+
+  <div class="result-actions">
+    <button onclick="scrollToPicker()">Назад к выбору</button>
+    <button onclick="recommend('${category}')">Ещё одну</button>
+  </div>
+`;
+    window.scrollToPicker = function () {
+  const el = document.getElementById("pick");
+  if (!el) return;
+  el.scrollIntoView({ behavior: "smooth", block: "start" });
+};
 
     // GA4 событие (если подключено в index.html)
     try {
