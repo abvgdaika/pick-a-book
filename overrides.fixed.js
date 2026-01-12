@@ -81,6 +81,11 @@ window.BOOKS = [{"title": "Мальтийский сокол", "author": "Дэш
       : "";
 
     result.innerHTML = `
+  <div class="result-actions">
+    <button onclick="scrollToPicker()">Назад к выбору</button>
+    <button onclick="recommend('${category}')">Ещё одну</button>
+  </div>
+
   <div class="book">
     <div class="cover">${coverHtml}</div>
     <div class="meta">
@@ -88,11 +93,6 @@ window.BOOKS = [{"title": "Мальтийский сокол", "author": "Дэш
       <div class="author">${author}</div>
       ${desc ? `<p class="desc">${desc}</p>` : ""}
     </div>
-  </div>
-
-  <div class="result-actions">
-    <button onclick="scrollToPicker()">Назад к выбору</button>
-    <button onclick="recommend('${category}')">Ещё одну</button>
   </div>
 `;
     window.scrollToPicker = function () {
