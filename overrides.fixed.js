@@ -1,6 +1,6 @@
 // overrides.fixed.js — библиотека + логика кнопок/вывода
 // Источник данных: CSV (title, author, category, description, cover)
-
+console.log("OVERRIDES VERSION: 2026-01-12 21:07");
 // 1) Настройки категорий: здесь меняешь подпись и возраст один раз
 window.CATEGORY_META = {
   serious:   { label: "Хочу что-то серьёзное", age: "16+" },
