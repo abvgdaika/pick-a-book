@@ -161,6 +161,22 @@
     color:rgba(255,255,255,.55);
     font-size:12px;
   }
+  /* === FIX: mobile scrolling (iOS/Safari/Chrome) === */
+@media (max-width: 640px){
+  html, body { height: auto; }
+
+  body{
+    display: block;              /* убираем flex-центрирование */
+    min-height: 100vh;
+    padding: 14px;
+    background-attachment: scroll; /* fixed фон часто ломает ощущение скролла */
+  }
+
+  .container{
+    width: 100%;
+    margin: 16px auto;
+  }
+}
 </style>
 </head>
 <body>
