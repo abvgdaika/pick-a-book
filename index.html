@@ -192,6 +192,32 @@
   font-weight:700;
   cursor:pointer;
 }
+  /* === Book layout: text first, cover second === */
+.book{
+  display: flex;
+  gap: 16px;
+}
+
+.book .meta{
+  order: 1;   /* текст первым */
+}
+
+.book .cover{
+  order: 2;   /* обложка после текста */
+}
+
+/* mobile: текст сверху, обложка снизу и по центру */
+@media (max-width: 640px){
+  .book{
+    flex-direction: column;
+  }
+
+  .book .cover{
+    align-self: center;
+    margin-top: 12px;
+    width: 120px;
+  }
+}
 </style>
 </head>
 <body>
@@ -224,6 +250,6 @@
     <div class="footer">© pick-a-book</div>
   </div>
 
-  <script src="overrides.fixed.js?v=10"></script>
+  <script src="overrides.fixed.js?v=11"></script>
 </body>
 </html>
